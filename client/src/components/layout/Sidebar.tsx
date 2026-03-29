@@ -38,7 +38,7 @@ export default function Sidebar() {
     // { icon: <CreditCard size={18} strokeWidth={1} />, label: 'Payout', path: '/host/payout', active: pathname === '/host/payout', requireRole: 'host' },
     { icon: <BarChart3 size={18} strokeWidth={1} />, label: 'Analytics', path: '/host/analytics', active: pathname === '/host/analytics', requireRole: 'host' },
     { icon: <User size={18} strokeWidth={1} />, label: 'Profile', path: '/host/profile', active: pathname === '/host/profile', requireRole: 'host' },
-    { icon: <Logo variant='icon' className="w-6 h-6 -ml-1" strokeWidth={"1"} />, label: 'Zenvy', path: '/about', active: pathname === '/about', },
+    { icon: <HelpCircle size={18} strokeWidth={1} />, label: 'About', path: '/about', active: pathname === '/about', },
     { icon: <BookOpen size={18} strokeWidth={1} />, label: 'Learn More', path: '/learn', active: pathname === '/learn' },
     { icon: <Calendar size={18} strokeWidth={1} />, label: 'Events', path: '/admin/events', active: pathname === '/admin/events', requireRole: 'admin' },
     { icon: <ShoppingBag size={18} strokeWidth={1} />, label: 'Orders', path: '/admin/orders', active: pathname === '/admin/orders', requireRole: 'admin' },
@@ -70,21 +70,23 @@ export default function Sidebar() {
         >
           <Menu size={24} />
         </button>
-        <div onClick={() => window.location.href = '/events'} className="flex cursor-pointer items-center gap-2">
-          <Logo variant='full' />
-        </div>
-        {user ? (
-          <div onClick={() => user?.role === 'host' ? router.push('/host/profile') : router.push('/wallet')} className={`w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer`}>
-            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
+        <div className="flex items-center gap-4">
+          {user ? (
+            <div onClick={() => user?.role === 'host' ? router.push('/host/profile') : router.push('/wallet')} className={`w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer`}>
+              <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
+            </div>
+          ) : (
+            <button
+              onClick={() => router.push('/auth?tab=login')}
+              className="p-2 text-slate-600 hover:text-slate-900"
+            >
+              <LogIn size={24} />
+            </button>
+          )}
+          <div onClick={() => window.location.href = '/events'} className="flex cursor-pointer items-center">
+            <Logo variant='full' />
           </div>
-        ) : (
-          <button
-            onClick={() => router.push('/auth?tab=login')}
-            className="p-2 text-slate-600 hover:text-slate-900"
-          >
-            <LogIn size={24} />
-          </button>
-        )}
+        </div>
       </div>
 
       {sidebarOpen && (
@@ -98,8 +100,13 @@ export default function Sidebar() {
       <aside className={`w-64 overflow-y-auto border-r border-slate-100 flex flex-col fixed h-full bg-white z-40 transition-transform duration-300 lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <div onClick={() => window.location.href = '/events'} className="p-6 flex cursor-pointer items-center gap-3">
-          <Logo variant='full' />
+        <div className="p-6 flex items-center justify-between">
+          <div onClick={() => window.location.href = '/events'} className="flex cursor-pointer items-center gap-3">
+            <Logo variant='full' />
+          </div>
+          <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-slate-500 hover:text-slate-900">
+            <X size={20} />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 py-4">

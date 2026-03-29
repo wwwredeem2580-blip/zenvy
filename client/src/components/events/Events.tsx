@@ -134,10 +134,18 @@ export default function Events() {
       {/* ─── Header ─── */}
       <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-gray-200 sticky top-0 bg-white z-30">
         <div className="flex items-center gap-4 md:gap-8">
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="md:hidden text-gray-700 hover:text-black z-50 relative"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+
           {/* Logo */}
           <div
             onClick={() => router.push('/')}
-            className="flex items-center cursor-pointer"
+            className="hidden md:flex items-center cursor-pointer"
           >
             <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" animated />
           </div>
@@ -181,14 +189,14 @@ export default function Events() {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3 relative">
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-gray-700 hover:text-black z-50 relative"
+        <div className="flex items-center gap-3 relative flex-row-reverse md:flex-row">
+          {/* Mobile Logo */}
+          <div
+            onClick={() => router.push('/')}
+            className="md:hidden flex items-center cursor-pointer"
           >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" animated />
+          </div>
 
           {/* Auth buttons when not logged in */}
           {!user && (
@@ -340,6 +348,9 @@ export default function Events() {
                   </button>
                 </>
               )}
+              <a href="/about" className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3">
+                <HelpCircle className="w-5 h-5" /> About
+              </a>
               <a href="/contact" className="hover:text-[#4d33de] transition-colors py-4 flex items-center gap-3">
                 <HelpCircle className="w-5 h-5" /> Contact Us
               </a>
@@ -666,11 +677,11 @@ function EventCard({
 
       {/* Card Content */}
       <div className="flex flex-col gap-1 px-2">
-        <h3 className="text-[15px] font-semibold text-[#161616] leading-snug line-clamp-2 group-hover:text-[#4d33de] transition-colors duration-200">
+        <h3 className="text-[18px] font-semibold text-[#161616] leading-snug line-clamp-2 group-hover:text-[#4d33de] transition-colors duration-200">
           {event.title}
         </h3>
 
-        <div className="flex items-start gap-1.5 text-[12px] text-gray-500 mt-0.5">
+        <div className="flex items-start gap-1.5 text-[14px] text-gray-500 mt-0.5">
           <Calendar className="w-3.5 h-3.5 shrink-0 mt-[1px]" />
           <span>
             {fmtDate(startDate)}{!sameDay && ` → ${fmtDate(endDate)}`}
@@ -679,7 +690,7 @@ function EventCard({
         </div>
 
         {location && (
-          <div className="flex items-center gap-1.5 text-[12px] text-gray-400">
+          <div className="flex items-center gap-1.5 text-[14px] text-gray-400">
             <MapPin className="w-3.5 h-3.5 shrink-0" />
             <span className="line-clamp-1">{location}</span>
           </div>
