@@ -132,7 +132,7 @@ export default function Events() {
     <div className="min-h-screen bg-white font-sans text-[#161616]">
 
       {/* ─── Header ─── */}
-      <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-gray-200 sticky top-0 bg-white z-30">
+      <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-gray-200 sticky top-0 bg-white z-50">
         <div className="flex items-center gap-4 md:gap-8">
           {/* Mobile hamburger */}
           <button
