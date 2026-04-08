@@ -18,6 +18,9 @@ import {
   X,
   Loader2,
   CheckCircle2,
+  Minus,
+  Plus,
+  ChevronRight,
 } from 'lucide-react';
 import { BDTIcon } from '../ui/Icons';
 
@@ -86,142 +89,6 @@ const MinimalMap = ({ venue, coordinates }: { venue?: string; coordinates?: numb
   );
 };
 
-/* ─── Credit-Card Style Ticket ─── */
-function TicketCardNew({
-  ticket,
-  quantity,
-  onIncrement,
-  onDecrement,
-  eventDate,
-}: {
-  ticket: any;
-  quantity: number;
-  onIncrement: () => void;
-  onDecrement: () => void;
-  eventDate: string;
-}) {
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  const price = ticket.price?.amount ?? ticket.price ?? 0;
-  const tierName: string = ticket.tier || ticket.name || 'Standard';
-  const benefits: string[] = ticket.benefits || ['Event access', 'Dedicated entrance'];
-
-  const isVIP = true
-  const isPremium = tierName.toLowerCase().includes('premium') || tierName.toLowerCase().includes('early');
-
-  const frontBg = isVIP
-    ? 'bg-[#1a1a1a] text-white'
-    : isPremium
-    ? 'bg-wix-purple text-white'
-    : 'bg-white text-wix-text-dark border-2 border-black';
-
-  const accentText = isVIP || isPremium ? 'text-gray-300' : 'text-wix-text-muted';
-
-  // Generate a display code from ticket id
-  const displayCode = (ticket._id || ticket.name || '0000')
-    .replace(/[^a-zA-Z0-9]/g, '')
-    .padEnd(16, '0')
-    .toUpperCase()
-    .match(/.{1,4}/g)
-    ?.join(' ') ?? '•••• •••• •••• ••••';
-
-  const sold = ticket.sold ?? 0;
-  const reserved = ticket.reserved ?? 0;
-  const totalQty = ticket.quantity ?? 999;
-  const available = Math.max(0, totalQty - sold - reserved);
-  const isSoldOut = available === 0;
-
-  return (
-    <div className="flex flex-col gap-5 items-center w-full max-w-[380px]">
-      {/* 3D flip card */}
-      <div
-        className="perspective-1000 w-full aspect-[1.586/1] cursor-pointer"
-        onClick={() => !isSoldOut && setIsFlipped(f => !f)}
-        title="Click to flip and see benefits"
-      >
-        <div className={`relative w-full h-full preserve-3d transition-transform duration-700 ease-in-out ${isFlipped ? 'rotate-y-180' : ''}`}>
-
-          {/* FRONT */}
-          <div className={`absolute inset-0 w-full h-full backface-hidden p-5 sm:p-6 flex flex-col justify-between ${frontBg} ${!isVIP && !isPremium ? '' : ''}`}>
-            {isSoldOut && (
-              <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
-                <span className="text-white text-[16px] font-black uppercase tracking-widest">Sold Out</span>
-              </div>
-            )}
-            <div className="flex justify-between items-start">
-              <div className="flex flex-col gap-1.5">
-                <ChipIcon />
-                <div className="opacity-70"><ContactlessIcon /></div>
-              </div>
-              <div className="text-right flex flex-col items-end">
-                <h3 className="text-[15px] font-black uppercase tracking-widest">{tierName}</h3>
-                <span className={`text-[10px] font-medium uppercase tracking-wider ${accentText}`}>Event Ticket</span>
-              </div>
-            </div>
-
-            <div className={`text-[16px] sm:text-[20px] font-mono tracking-widest mt-auto mb-3 ${accentText}`}>
-              Powered by Zenvy
-            </div>
-
-            <div className="flex justify-between items-end">
-              <div className="flex flex-col">
-                <span className={`text-[9px] uppercase tracking-widest ${accentText} mb-0.5`}>Valid for</span>
-                <span className="text-[13px] font-mono font-bold tracking-wide uppercase">Admit One</span>
-              </div>
-              <div className="flex flex-col text-right">
-                <span className={`text-[9px] uppercase tracking-widest ${accentText} mb-0.5`}>Price</span>
-                <span className="text-[16px] font-bold font-mono">
-                  {price === 0 ? 'FREE' : <><BDTIcon className="inline text-[13px]" />{price.toLocaleString()}</>}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* BACK */}
-          <div className={`absolute inset-0 w-full h-full backface-hidden border-2 border-black ${frontBg} flex flex-col rotate-y-180 overflow-hidden`}>
-            <div className="px-5 py-4 flex flex-col flex-1">
-              <div className="bg-gray-100 h-8 w-full flex items-center justify-end px-4 font-mono text-[11px] mb-4 text-gray-500">
-                VALID: {eventDate}
-              </div>
-              <div className={`text-[10px] ${accentText} uppercase tracking-widest mb-2 border-b border-black pb-3`}>
-                Included Benefits
-              </div>
-              <ul className={`flex flex-col gap-1.5 text-[12px] font-medium leading-snug ${accentText}`}>
-                {benefits.slice(0, 5).map((b: string, i: number) => (
-                  <li key={i}>• {b}</li>
-                ))}
-                {benefits.length > 5 && <li className={accentText}>• +{benefits.length - 5} more</li>}
-              </ul>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Quantity controls */}
-      {!isSoldOut && (
-        <div className="flex items-center justify-between border-2 border-black w-[152px] bg-white h-[46px] overflow-hidden">
-          <button
-            onClick={onDecrement}
-            className="w-12 h-full flex items-center justify-center hover:bg-black hover:text-white transition-colors text-xl font-medium"
-          >
-            −
-          </button>
-          <span className="font-mono text-[15px] font-bold">{quantity}</span>
-          <button
-            onClick={onIncrement}
-            className="w-12 h-full flex items-center justify-center hover:bg-black hover:text-white transition-colors text-xl font-medium"
-          >
-            +
-          </button>
-        </div>
-      )}
-      {isSoldOut && (
-        <span className="text-[12px] text-red-500 font-bold uppercase tracking-widest">Sold Out</span>
-      )}
-    </div>
-  );
-}
 
 /* ─── Main EventDetails Component ─── */
 export default function EventDetails() {
@@ -431,7 +298,7 @@ export default function EventDetails() {
           </div>
 
           {/* Title & Tagline */}
-          <div>
+          <div className='mt-6'>
             <div className="flex items-center gap-2 mb-3">
               {event.status === 'live' && (
                 <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest border border-emerald-500 text-emerald-600 px-2.5 py-1">
@@ -457,7 +324,7 @@ export default function EventDetails() {
 
             {/* Cover Image */}
             <div
-              className="w-full md:w-3/4 h-full border border-ink/10 relative overflow-hidden group cursor-pointer bg-neutral-900 flex items-center justify-center shadow-sm"
+              className="w-full md:w-3/4 h-full relative overflow-hidden group cursor-pointer bg-neutral-900 flex items-center justify-center shadow-sm"
               onClick={() => setSelectedImage({ url: coverImageUrl, label: event.title })}
             >
               {coverImageUrl ? (
@@ -627,37 +494,105 @@ export default function EventDetails() {
           </div>
 
           {/* ─── Tickets Section ─── */}
-          <div className="flex flex-col gap-8">
-            <div>
-              <h2 className="text-[24px] font-semibold tracking-tight text-wix-text-dark">Select Tickets</h2>
-              <p className="text-[14px] text-wix-text-muted mt-1">Flip the card to view benefits. Select your quantity below each ticket.</p>
+          <div className="pt-20 border-t border-ink/5">
+            <h2 className="text-3xl font-serif mb-12">Select Your Experience</h2>
+            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+              {(event.tickets || [])
+                .filter((t: any) => t.isVisible && t.isActive)
+                .map((ticket: any) => {
+                  const ticketId = ticket._id || ticket.name;
+                  const qty = ticketQuantities[ticketId] || 0;
+                  const available = Math.max(0, (ticket.quantity || 0) - (ticket.sold || 0) - (ticket.reserved || 0));
+                  const isSoldOut = available === 0;
+                  const price = ticket.price?.amount ?? ticket.price ?? 0;
+                  const tierName = ticket.tier || ticket.name || 'Standard';
+
+                  return (
+                    <div 
+                      key={ticketId}
+                      className={`p-10 border transition-all group/card ${
+                        qty > 0 
+                          ? 'bg-ink text-bg border-ink' 
+                          : 'bg-white border-ink/5 hover:border-ink/20'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-8">
+                        <h4 className="text-2xl font-serif">{tierName}</h4>
+                        <span className="text-xl font-serif">
+                          {price === 0 ? 'FREE' : <>৳{price.toLocaleString()}</>}
+                        </span>
+                      </div>
+                      <p className={`text-sm leading-relaxed mb-8 font-light line-clamp-3 ${qty > 0 ? 'opacity-60' : 'text-ink-muted'}`}>
+                        {ticket.description || "Access to the main event with standard seating and amenities."}
+                      </p>
+                      <ul className="space-y-3 mb-10">
+                        {(ticket.benefits || ['Event access', 'Standard entry']).slice(0, 4).map((benefit: string, i: number) => (
+                          <li key={i} className="text-[10px] uppercase tracking-widest flex items-center gap-3">
+                            <ChevronRight size={12} className={qty > 0 ? 'text-bg/40' : 'text-ink/20'} /> 
+                            {benefit}
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      {isSoldOut ? (
+                        <div className="w-full py-4 text-[10px] font-bold uppercase tracking-[0.3em] bg-neutral-100 text-neutral-400 text-center">
+                          Sold Out
+                        </div>
+                      ) : qty > 0 ? (
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => handleDecrement(ticketId)}
+                            className="w-12 h-12 border border-bg/20 flex items-center justify-center hover:bg-bg/10 transition-colors"
+                          >
+                            <Minus size={16} />
+                          </button>
+                          <div className="flex-1 text-center font-serif text-2xl">{qty}</div>
+                          <button 
+                            onClick={() => handleIncrement(ticketId, available)}
+                            className="w-12 h-12 border border-bg/20 flex items-center justify-center hover:bg-bg/10 transition-colors"
+                          >
+                            <Plus size={16} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleIncrement(ticketId, available)}
+                          className="w-full py-4 text-[10px] font-bold uppercase tracking-[0.3em] bg-ink text-bg group-hover/card:bg-ink/90 transition-all"
+                        >
+                          Add Ticket
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
             </div>
 
-            {event.moderation?.sales?.paused && (
-              <div className="p-4 bg-red-50 border border-red-200 text-[13px] text-red-600">
-                Ticket sales are currently paused. Please check back later.
+            {/* Total & Action */}
+            <div className="mt-12 flex flex-col items-center gap-6">
+              <div className="flex flex-col items-center gap-2 mb-4">
+                <span className="text-[10px] uppercase tracking-[0.3em] opacity-40 font-bold">Total Amount</span>
+                <span className="text-4xl font-serif">
+                   ৳{grandTotal.toLocaleString()}
+                </span>
+                {totalItems > 0 && (
+                  <span className="text-xs uppercase tracking-widest opacity-40">{totalItems} Tickets Selected</span>
+                )}
               </div>
-            )}
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10 justify-items-center">
-              {(event.tickets || []).filter((t: any) => t.isVisible && t.isActive).map((ticket: any) => {
-                const available = Math.max(0, (ticket.quantity || 0) - (ticket.sold || 0) - (ticket.reserved || 0));
-                return (
-                  <TicketCardNew
-                    key={ticket._id || ticket.name}
-                    ticket={ticket}
-                    quantity={ticketQuantities[ticket._id || ticket.name] || 0}
-                    onIncrement={() => handleIncrement(ticket._id || ticket.name, available)}
-                    onDecrement={() => handleDecrement(ticket._id || ticket.name)}
-                    eventDate={eventDateShort}
-                  />
-                );
-              })}
+              <button 
+                onClick={handleBookNow}
+                disabled={totalItems === 0 || creatingOrder}
+                className="px-12 py-6 bg-indigo-600 text-bg font-bold uppercase tracking-[0.4em] text-xs disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center gap-3"
+              >
+                {creatingOrder ? <Loader2 className="animate-spin w-4 h-4" /> : null}
+                {creatingOrder ? 'Processing...' : 'Confirm Purchase'}
+              </button>
+              <p className="text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold">
+                Secure checkout powered by Zenvy Pay
+              </p>
             </div>
-
-            {/* Order error */}
+            
             {orderError && (
-              <div className="p-4 bg-red-50 border border-red-200 text-[13px] text-red-600 max-w-md">
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 text-[13px] text-red-600 text-center mx-auto max-w-md">
                 {orderError}
               </div>
             )}
@@ -752,44 +687,6 @@ export default function EventDetails() {
         )}
       </AnimatePresence>
 
-      {/* ─── Sticky Checkout Bar ─── */}
-      <div
-        className={`fixed bottom-0 left-0 w-full bg-white border-t-2 border-black px-4 sm:px-8 py-4 z-50 transition-transform duration-500 flex flex-col sm:flex-row items-center justify-between gap-4 ${totalItems > 0 ? 'translate-y-0' : 'translate-y-full'}`}
-      >
-        <div className="flex items-center gap-6">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">Selection</span>
-            <span className="text-[20px] font-bold text-wix-text-dark">
-              {totalItems} Ticket{totalItems !== 1 ? 's' : ''}
-            </span>
-          </div>
-          <div className="h-10 w-px bg-wix-border-light hidden sm:block" />
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">Total Due</span>
-            <span className="text-[22px] font-mono font-bold text-wix-text-dark leading-none flex items-center gap-0.5">
-              {grandTotal === 0 ? 'FREE' : <><BDTIcon className="text-[18px]" />{grandTotal.toLocaleString()}</>}
-            </span>
-          </div>
-          {paymentProcessingFee > 0 && (
-            <div className="hidden sm:flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">Incl. fees</span>
-              <span className="text-[12px] text-wix-text-muted">
-                <BDTIcon className="text-[11px]" />{paymentProcessingFee} processing
-              </span>
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={handleBookNow}
-          disabled={creatingOrder}
-          className="w-full sm:w-auto bg-black text-white px-10 py-4 text-[13px] font-black uppercase tracking-widest hover:bg-wix-purple transition-colors border-2 border-black hover:border-wix-purple disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {creatingOrder ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Processing...</>
-          ) : grandTotal === 0 ? 'Get Free Tickets' : 'Proceed to Checkout'}
-        </button>
-      </div>
 
       {/* ─── CheckoutBKash modal ─── */}
       <AnimatePresence>
