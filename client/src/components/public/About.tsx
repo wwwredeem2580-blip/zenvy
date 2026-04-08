@@ -11,8 +11,6 @@ import {
   TrendingUp, 
   ArrowRight
 } from 'lucide-react';
-import { Navbar } from '../layout/Navbar';
-import { Footer } from '../layout/Footer';
 import { Button } from '../ui/button';
 import { Logo } from '../shared/Logo';
 import { useRouter } from 'next/navigation';
@@ -26,7 +24,6 @@ const About: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
-      <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 px-6 overflow-hidden">

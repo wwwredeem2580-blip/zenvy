@@ -1,20 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NotificationProvider } from "@/lib/context/notification";
 import { AuthProvider } from "@/lib/context/auth";
 import { NotificationToast } from "@/components/ui/NotificationToast";
 import { SupportProvider } from "@/lib/context/support";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Zenvy - Event Management Platform",
@@ -29,13 +20,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className="antialiased min-h-screen flex flex-col selection:bg-ink selection:text-bg"
         suppressHydrationWarning
       >
         <NotificationProvider>
           <AuthProvider>
             <SupportProvider>
-              {children}
+              <Navbar />
+              <main className="flex-1 px-6 md:px-12 max-w-7xl mx-auto w-full">
+                {children}
+              </main>
+              <Footer />
               <NotificationToast />
             </SupportProvider>
           </AuthProvider>

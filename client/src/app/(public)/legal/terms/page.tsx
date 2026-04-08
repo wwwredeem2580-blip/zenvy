@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Navbar } from '@/components/layout/Navbar';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
@@ -53,7 +52,6 @@ export default function TermsOfServicePage() {
 
   return (
     <div className="min-h-screen bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
-      <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
 
       {/* Hero Header */}
       <div className="pt-12 pb-16 px-6 bg-radial-gradient from-brand-50/50 to-transparent">

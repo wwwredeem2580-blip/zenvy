@@ -1,12 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Matemasie&family=Kirang+Haerang&family=Wix+Madefor+Display:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Matemasie&family=Kirang+Haerang&family=Wix+Madefor+Display:wght@400;500;600;700;800&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
 @config "../../tailwind.config.js";
 
 @theme {
   --font-sans: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Wix Madefor Display", ui-serif, system-serif, serif;
+  --font-bengali: "Hind Siliguri", sans-serif;
   --font-matemasie: "Matemasie", ui-sans-serif, system-ui, sans-serif;
   --font-kirang-haerang: "Kirang Haerang", ui-sans-serif, system-ui, sans-serif;
+
+  --color-bg: #f5f5f5;
+  --color-ink: #111111;
+  --color-ink-muted: #11111199;
 
   --color-wix-purple: #4a2bed;
   --color-wix-purple-hover: #3b22bc;
@@ -17,6 +23,26 @@
   --color-wix-avatar-bg: #8a6c60;
   --color-wix-input-border: #161616;
   --color-wix-card-border: #e1e1e1;
+
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes reverse-spin {
+    from { transform: rotate(360deg); }
+    to { transform: rotate(0deg); }
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+.animate-reverse-spin {
+  animation: reverse-spin 15s linear infinite;
+}
+
+.font-bengali {
+  font-family: var(--font-bengali);
 }
 
 @layer base {

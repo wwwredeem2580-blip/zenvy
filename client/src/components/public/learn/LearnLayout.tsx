@@ -15,8 +15,6 @@ import {
   X,
   ChevronRight
 } from 'lucide-react';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 
 interface LearnLayoutProps {
   children: React.ReactNode;
@@ -41,8 +39,7 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
   const handleGetStarted = () => router.push('/onboarding');
 
   return (
-    <div className="min-h-screen max-w-[1280px] mx-auto bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
-      <Navbar onLogin={handleLogin} onGetStarted={handleGetStarted} />
+    <div className="bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
       
       <div className="w-full px-4 py-4 md:px-6 md:py-6 flex flex-col lg:flex-row gap-2 relative">
         {/* Mobile Sidebar Toggle */}

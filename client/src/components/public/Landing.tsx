@@ -10,8 +10,6 @@ import {
   CreditCard, Clock10, Music, Mic, Disc, Headphones, Speaker, PartyPopper,
   Users, Image, Rocket, Clapperboard, Trophy, Briefcase, Heart, PenTool, LayoutDashboard, Hammer, QrCode
 } from 'lucide-react';
-import { Navbar } from '../layout/Navbar';
-import { Footer } from '../layout/Footer';
 import { Logo } from '../shared/Logo';
 import { Button } from '../ui/button';
 import { useAuth } from '@/lib/context/auth';
@@ -178,9 +176,6 @@ export const Landing: React.FC<LandingProps> = ({ onGetStarted, onLogin, onExplo
   
   return (
     <div className="min-h-screen bg-neutral-0 selection:bg-brand-100 selection:text-brand-700">
-      {/* Navigation */}
-      <Navbar onLogin={onLogin} onGetStarted={onGetStarted} />
-
       {/* Hero Section */}
       <section className="relative pt-20 pb-16 overflow-hidden px-6">
         {/* Background Cover Image */}

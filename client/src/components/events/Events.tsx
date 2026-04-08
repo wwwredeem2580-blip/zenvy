@@ -10,10 +10,12 @@ import {
   Wallet as WalletIcon, Users as UsersIcon,
   LayoutDashboard, Home, Calendar, Clock, MapPin,
   LogIn, UserPlus, Plus, HelpCircle, Tag,
+  Music, Mic2, Headphones, Users, Presentation,
+  PartyPopper, GlassWater, Sparkles, Star, Speaker,
+  MessageSquare, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BDTIcon } from '../ui/Icons';
-import { Logo } from '../shared/Logo';
 
 interface EventFilters {
   category?: string;
@@ -39,9 +41,7 @@ export default function Events() {
   const router = useRouter();
   const { user } = useAuth();
 
-  // Nav state
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  // Nav state removed as it is now global in layout
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -56,11 +56,6 @@ export default function Events() {
   const [trendingEvents, setTrendingEvents] = useState<any[]>([]);
   const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
 
-  // Prevent body scroll when mobile menu is open
-  useEffect(() => {
-    document.body.style.overflow = isMobileMenuOpen ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
-  }, [isMobileMenuOpen]);
 
   // Fetch initial data
   useEffect(() => {
@@ -129,267 +124,74 @@ export default function Events() {
   const avatarInitial = user?.email?.[0]?.toUpperCase() ?? 'G';
 
   return (
-    <div className="min-h-screen bg-white font-sans text-[#161616]">
+    <div className="min-h-screen mt-20 font-sans text-[#161616]">
 
-      {/* ─── Header ─── */}
-      <header className="flex items-center justify-between px-6 md:px-10 py-4 border-b border-gray-200 sticky top-0 bg-white z-50">
-        <div className="flex items-center gap-4 md:gap-8">
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden text-gray-700 hover:text-black z-50 relative"
-          >
-            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
-
-          {/* Logo */}
-          <div
-            onClick={() => router.push('/')}
-            className="hidden md:flex items-center cursor-pointer"
-          >
-            <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" animated />
-          </div>
-
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-6 text-[15px]">
-            <button
-              onClick={() => router.push('/')}
-              className="hover:text-[#4d33de] transition-colors font-medium text-[#4d33de]"
-            >
-              Events
-            </button>
-            {user?.role === 'host' && (
-              <>
-                <button
-                  onClick={() => router.push('/host/dashboard')}
-                  className="hover:text-[#4d33de] transition-colors"
-                >
-                  Dashboard
-                </button>
-                {/* <button
-                  onClick={() => router.push('/host/events')}
-                  className="hover:text-[#4d33de] transition-colors"
-                >
-                  My Events
-                </button> */}
-              </>
-            )}
-            {user?.role === 'user' && (
-              <button
-                onClick={() => router.push('/wallet')}
-                className="hover:text-[#4d33de] transition-colors"
-              >
-                Wallet
-              </button>
-            )}
-            <div className="w-px h-4 bg-gray-300 mx-1" />
-            <a href="/contact" className="hover:text-[#4d33de] transition-colors">Contact Us</a>
-            <a href="/about" className="hover:text-[#4d33de] transition-colors">About</a>
-          </nav>
-        </div>
-
-        {/* Right side */}
-        <div className="flex items-center gap-3 relative flex-row-reverse md:flex-row">
-          {/* Mobile Logo */}
-          <div
-            onClick={() => router.push('/')}
-            className="md:hidden flex items-center cursor-pointer"
-          >
-            <Logo variant="full" className="h-6 text-brand-600" strokeWidth="2" animated />
-          </div>
-
-          {/* Auth buttons when not logged in */}
-          {!user && (
-            <div className="hidden md:flex items-center gap-2">
-              <button
-                onClick={() => router.push('/auth?tab=login')}
-                className="flex items-center gap-1.5 px-4 py-1.5 text-[14px] text-gray-600 hover:text-[#4d33de] transition-colors"
-              >
-                <LogIn className="w-4 h-4" /> Sign In
-              </button>
-              <button
-                onClick={() => router.push('/onboarding')}
-                className="flex items-center gap-1.5 px-4 py-1.5 bg-[#4d33de] text-white text-[14px] rounded-lg hover:bg-[#3d26c0] transition-colors"
-              >
-                <UserPlus className="w-4 h-4" /> Get Started
-              </button>
-            </div>
-          )}
-
-          {/* Profile avatar */}
-          {user && (
-            <div className="relative">
-              <button
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-9 h-9 rounded-full bg-[#7b1fa2] text-white flex items-center justify-center text-sm font-medium hover:opacity-90 transition-opacity overflow-hidden border-2 border-transparent hover:border-[#4d33de]"
-              >
-                <img
-                  src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${avatarSeed}`}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              </button>
-
-              <AnimatePresence>
-                {isProfileOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                      className="absolute right-0 mt-2 w-64 bg-white rounded-sm shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 py-2 z-50"
-                    >
-                      {/* User info */}
-                      <div className="px-4 py-3 border-b border-gray-100">
-                        <p className="text-[13px] font-medium text-[#161616] truncate">{user.firstName} {user.lastName}</p>
-                        <p className="text-[11px] text-gray-400 capitalize">{user.role}</p>
-                      </div>
-                      {user.role === 'host' && (
-                        <>
-                          <button
-                            onClick={() => { router.push('/host/dashboard'); setIsProfileOpen(false); }}
-                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-gray-400" /> Dashboard
-                          </button>
-                          <button
-                            onClick={() => { router.push('/host/events/create'); setIsProfileOpen(false); }}
-                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
-                          >
-                            <Plus className="w-4 h-4 text-gray-400" /> Create Event
-                          </button>
-                          <button
-                            onClick={() => { router.push('/host/profile'); setIsProfileOpen(false); }}
-                            className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
-                          >
-                            <UsersIcon className="w-4 h-4 text-gray-400" /> Profile
-                          </button>
-                        </>
-                      )}
-                      {user.role === 'user' && (
-                        <button
-                          onClick={() => { router.push('/wallet'); setIsProfileOpen(false); }}
-                          className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-[#161616] transition-colors flex items-center gap-3"
-                        >
-                          <WalletIcon className="w-4 h-4 text-gray-400" /> Wallet
-                        </button>
-                      )}
-                      <div className="h-px bg-gray-100 my-1 mx-4" />
-                      <button
-                        onClick={() => { handleLogout(); setIsProfileOpen(false); }}
-                        className="w-full px-4 py-2.5 text-left hover:bg-gray-50 text-[14px] text-red-500 transition-colors"
-                      >
-                        Sign Out
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-          )}
-        </div>
-      </header>
-
-      {/* ─── Mobile Menu Overlay ─── */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
+      {/* Hero Section */}
+      <section className="pt-20 pb-20">
+        <div className="grid md:grid-cols-2 gap-12 items-end">
           <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <span className="text-sm font-medium uppercase tracking-[0.3em] text-ink/40 mb-6 block">
+              Redefining Experiences
+            </span>
+            <h1 className="font-bengali leading-[1.1] tracking-tight mb-8 text-ink">
+              <span className="text-2xl md:text-5xl block mb-2 font-bold">আপনার শহরের ইভেন্ট এখন,</span>
+              <span className="text-3xl md:text-6xl font-light block">আপনার হাতের মুঠোয়।</span>
+            </h1>
+            <p className="text-base md:text-lg text-ink-muted max-w-[730px] leading-relaxed mb-10 font-bengali">
+              জেনভি বাংলাদেশের সেরা ইভেন্ট প্ল্যাটফর্ম। আর্ট শো থেকে শুরু করে বড় টেক সামিট—সবকিছুই আপনার হাতের নাগালে।
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30" size={18} />
+                <input 
+                  type="text" 
+                  placeholder="Search events, artists, venues..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKey}
+                  className="w-full bg-white border border-ink/5 rounded-2xl py-4 pl-12 pr-4 focus:outline-none focus:border-ink/20 transition-all text-sm font-sans"
+                />
+              </div>
+              <button 
+                onClick={handleSearch}
+                className="bg-ink text-bg px-8 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 hover:gap-4 transition-all group shrink-0"
+              >
+                Find Events <ArrowRight size={18} className="transition-all" />
+              </button>
+            </div>
+          </motion.div>
+
+          <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-white z-40 md:hidden pt-20 px-6"
+            transition={{ duration: 1, delay: 0.2 }}
+            className="relative aspect-video hidden md:block overflow-hidden"
           >
-            <nav className="flex flex-col gap-0 text-base font-medium">
-              <button
-                onClick={() => { router.push('/'); setIsMobileMenuOpen(false); }}
-                className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
-              >
-                <Home className="w-5 h-5" /> Events
-              </button>
-              {user?.role === 'host' && (
-                <>
-                  <button
-                    onClick={() => { router.push('/host/dashboard'); setIsMobileMenuOpen(false); }}
-                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
-                  >
-                    <LayoutDashboard className="w-5 h-5" /> Dashboard
-                  </button>
-                  <button
-                    onClick={() => { router.push('/host/events'); setIsMobileMenuOpen(false); }}
-                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
-                  >
-                    <Calendar className="w-5 h-5" /> My Events
-                  </button>
-                </>
-              )}
-              {user?.role === 'user' && (
-                <button
-                  onClick={() => { router.push('/wallet'); setIsMobileMenuOpen(false); }}
-                  className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3 text-left"
-                >
-                  <WalletIcon className="w-5 h-5" /> Wallet
-                </button>
-              )}
-              {!user && (
-                <>
-                  <button
-                    onClick={() => { router.push('/auth?tab=login'); setIsMobileMenuOpen(false); }}
-                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3"
-                  >
-                    <LogIn className="w-5 h-5" /> Sign In
-                  </button>
-                  <button
-                    onClick={() => { router.push('/onboarding'); setIsMobileMenuOpen(false); }}
-                    className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3"
-                  >
-                    <UserPlus className="w-5 h-5" /> Get Started
-                  </button>
-                </>
-              )}
-              <a href="/about" className="hover:text-[#4d33de] transition-colors py-4 border-b border-gray-100 flex items-center gap-3">
-                <HelpCircle className="w-5 h-5" /> About
-              </a>
-              <a href="/contact" className="hover:text-[#4d33de] transition-colors py-4 flex items-center gap-3">
-                <HelpCircle className="w-5 h-5" /> Contact Us
-              </a>
-            </nav>
+            <div className="absolute inset-0">
+              {[
+                { Icon: Music, color: 'text-blue-400', size: 32 },
+                { Icon: Mic2, color: 'text-purple-400', size: 28 },
+                { Icon: Headphones, color: 'text-indigo-400', size: 30 },
+                { Icon: Users, color: 'text-emerald-400', size: 34 },
+                { Icon: Presentation, color: 'text-amber-400', size: 32 },
+                { Icon: Globe, color: 'text-cyan-400', size: 26 },
+                { Icon: PartyPopper, color: 'text-pink-400', size: 36 },
+                { Icon: GlassWater, color: 'text-orange-400', size: 24 },
+                { Icon: Sparkles, color: 'text-yellow-400', size: 30 },
+                { Icon: Star, color: 'text-rose-400', size: 28 },
+                { Icon: Speaker, color: 'text-violet-400', size: 32 },
+                { Icon: MessageSquare, color: 'text-teal-400', size: 26 },
+              ].map((item, i) => (
+                <FloatingIcon key={i} item={item} i={i} />
+              ))}
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Hero ─── */}
-      <section className="py-12 md:py-20 text-center px-4">
-        <motion.h1
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-3xl md:text-[44px] font-medium mb-8 md:mb-12 tracking-tight"
-        >
-          Pick from the Events You Love
-        </motion.h1>
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="relative w-full max-w-[560px] mx-auto border-b border-black pb-2 flex items-center gap-3"
-        >
-          <Search className="w-5 h-5 text-gray-500 flex-shrink-0" />
-          <input
-            type="text"
-            placeholder="Search events..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            onKeyDown={handleSearchKey}
-            className="w-full outline-none text-[17px] placeholder:text-gray-400 bg-transparent"
-          />
-          {searchQuery && (
-            <button onClick={() => { setSearchQuery(''); handleFilterChange('search', ''); }} className="text-gray-400 hover:text-gray-700">
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </motion.div>
+        </div>
       </section>
 
       {/* ─── Filter Bar ─── */}
@@ -603,6 +405,60 @@ export default function Events() {
         </div>
       </main>
     </div>
+  );
+}
+
+function FloatingIcon({ item, i }: { item: any; i: number }) {
+  return (
+    <motion.div
+      className={`absolute ${item.color} opacity-60 hover:opacity-100 transition-opacity duration-500 cursor-pointer`}
+      initial={{ 
+        x: Math.random() * 400 + 50, 
+        y: Math.random() * 300 + 50,
+        scale: 0,
+        rotate: Math.random() * 360
+      }}
+      animate={{ 
+        x: [
+          Math.random() * 400 + 50, 
+          Math.random() * 400 + 50, 
+          Math.random() * 400 + 50,
+          Math.random() * 400 + 50
+        ],
+        y: [
+          Math.random() * 300 + 50, 
+          Math.random() * 300 + 50, 
+          Math.random() * 300 + 50,
+          Math.random() * 300 + 50
+        ],
+        scale: [0, 1, 1.1, 1],
+        rotate: [0, 90, 180, 360],
+      }}
+      transition={{ 
+        duration: 15 + Math.random() * 10,
+        repeat: Infinity,
+        ease: "linear",
+        delay: i * 0.5,
+        scale: {
+          duration: 2,
+          times: [0, 0.2, 0.5, 1],
+          ease: "easeOut"
+        }
+      }}
+      whileHover={{ 
+        scale: 1.5, 
+        rotate: 0,
+        opacity: 1,
+        transition: { duration: 0.3 }
+      }}
+      onClick={() => {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3');
+        audio.volume = 0.1;
+        audio.play().catch(() => {});
+      }}
+    >
+      <item.Icon size={item.size} strokeWidth={1.5} />
+    </motion.div>
   );
 }
 
