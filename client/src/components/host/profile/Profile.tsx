@@ -9,107 +9,18 @@ import {
   Smartphone,
   CheckCircle2,
   AlertCircle,
-  X as CloseIcon,
+  ShieldCheck,
+  RotateCw,
+  X,
   Loader2,
 } from 'lucide-react';
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'motion/react';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/context/auth';
 import { phoneOTPAPI } from '@/lib/api/phone';
 import { useNotification } from '@/lib/context/notification';
 import { hostEventsService } from '@/lib/api/host';
 
-/* ─── Chip SVG ─── */
-const ChipIcon = () => (
-  <svg width="40" height="28" viewBox="0 0 40 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="40" height="28" rx="4" fill="#E2E8F0" />
-    <path d="M12 0V28M28 0V28M0 14H40M12 8H0M28 8H40M12 20H0M28 20H40" stroke="#CBD5E1" strokeWidth="1.5" />
-    <rect x="14" y="6" width="12" height="16" rx="2" stroke="#CBD5E1" strokeWidth="1.5" />
-  </svg>
-);
-
-/* ─── 3D tilt payment card ─── */
-const PaymentCard = ({
-  type,
-  details,
-  color = '#161616',
-  logo,
-  accentColor = '#4a2bed',
-}: {
-  type: string;
-  details: any;
-  color?: string;
-  logo?: React.ReactNode;
-  accentColor?: string;
-}) => {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const mouseXSpring = useSpring(x);
-  const mouseYSpring = useSpring(y);
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['15deg', '-15deg']);
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-15deg', '15deg']);
-  const glareX = useTransform(mouseXSpring, [-0.5, 0.5], ['-50%', '50%']);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left) / rect.width - 0.5);
-    y.set((e.clientY - rect.top) / rect.height - 0.5);
-  };
-
-  return (
-    <div
-      className="w-full max-w-[400px] aspect-[1.586/1] mx-auto group cursor-pointer"
-      style={{ perspective: '1000px' }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={() => { x.set(0); y.set(0); }}
-    >
-      <motion.div
-        style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-        className="w-full h-full relative rounded-2xl border-2 border-wix-text-dark overflow-hidden"
-        animate={{ backgroundColor: color }}
-        transition={{ duration: 0.4 }}
-      >
-        {/* Glare */}
-        <motion.div
-          className="absolute inset-0 z-20 pointer-events-none opacity-40"
-          style={{
-            background: 'linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.3) 25%, transparent 30%)',
-            x: glareX,
-          }}
-        />
-        {/* Content */}
-        <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-between z-10 text-white" style={{ transformStyle: 'preserve-3d' }}>
-          <div className="flex justify-between items-start" style={{ transform: 'translateZ(40px)' }}>
-            {type === 'card' ? <ChipIcon /> : <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">{logo}</div>}
-            <div className="text-xl italic font-serif font-bold tracking-widest text-gray-300">
-              {type === 'card' ? 'WIX' : type.toUpperCase()}
-              <span className="text-white">{type === 'card' ? 'PAY' : ''}</span>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1" style={{ transform: 'translateZ(60px)' }}>
-            <div className="font-mono text-[1.4rem] sm:text-2xl tracking-[0.2em] mb-2">
-              {details.number || (type === 'card' ? '**** **** **** ****' : '01XXX XXXXXX')}
-            </div>
-            <div className="flex justify-between items-end text-sm text-gray-400 font-medium tracking-widest uppercase">
-              <div className="flex flex-col">
-                <span className="text-[10px] mb-1">{type === 'card' ? 'Cardholder' : 'Account Name'}</span>
-                <span className="text-white">{details.name || 'YOUR NAME'}</span>
-              </div>
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] mb-1">{type === 'card' ? 'Expires' : 'Status'}</span>
-                <span className="text-white">{type === 'card' ? (details.expiry || 'MM/YY') : 'VERIFIED'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Background glow */}
-        <div
-          className="absolute -bottom-20 -right-20 w-64 h-64 opacity-20 rounded-full blur-2xl"
-          style={{ backgroundColor: accentColor }}
-        />
-      </motion.div>
-    </div>
-  );
-};
+// OTP Modal Component
 
 /* ─── OTP Modal ─── */
 const OtpModal = ({
@@ -172,7 +83,7 @@ const OtpModal = ({
           className="bg-white w-full max-w-[480px] p-8 sm:p-10 border border-wix-border-light shadow-2xl relative"
         >
           <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors">
-            <CloseIcon className="w-6 h-6" />
+            <X className="w-6 h-6" />
           </button>
           <div className="flex flex-col items-center text-center">
             <div className="w-16 h-16 bg-wix-purple/10 rounded-full flex items-center justify-center mb-6">
@@ -280,11 +191,11 @@ export function Profile() {
   }, []);
 
   const paymentMethods = [
-    { id: 'card', name: 'Credit Card', icon: <CreditCard className="w-5 h-5" />, color: '#161616', accent: '#4a2bed' },
-    { id: 'bkash', name: 'bKash', icon: <span className="font-bold text-[10px]">bK</span>, color: '#e2136e', accent: '#ffffff' },
-    { id: 'nagad', name: 'Nagad', icon: <span className="font-bold text-[10px]">N</span>, color: '#f7941d', accent: '#ffffff' },
-    { id: 'rocket', name: 'Rocket', icon: <span className="font-bold text-[10px]">R</span>, color: '#8c3494', accent: '#ffffff' },
-    { id: 'upay', name: 'Upay', icon: <span className="font-bold text-[10px]">U</span>, color: '#00adef', accent: '#ffffff' },
+    { id: 'card', name: 'Credit Card', icon: <CreditCard size={16} />, color: '#1a1a1a' },
+    { id: 'bkash', name: 'bKash', icon: <span className="font-bold text-[10px]">bK</span>, color: '#D12053' },
+    { id: 'nagad', name: 'Nagad', icon: <span className="font-bold text-[10px]">N</span>, color: '#F7941D' },
+    { id: 'rocket', name: 'Rocket', icon: <span className="font-bold text-[10px]">R</span>, color: '#8C3494' },
+    { id: 'upay', name: 'Upay', icon: <span className="font-bold text-[10px]">U</span>, color: '#005C99' },
   ];
 
   const currentMethod = paymentMethods.find(m => m.id === selectedMethod) || paymentMethods[0];
@@ -385,350 +296,299 @@ export function Profile() {
   const profileComplete = isPhoneVerified && payoutSet;
 
   return (
-    <div className="max-w-[1240px] mx-auto w-full px-6 py-12 flex flex-col gap-6">
-
-      {/* ── Profile Complete Eligibility Banner ── */}
-      <AnimatePresence>
-        {profileComplete && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
+    <div className="pt-24 sm:pt-32 pb-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto">
+      {/* Profile Status Banner */}
+      <AnimatePresence mode="wait">
+        {profileComplete ? (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            className="flex items-center gap-4 px-6 py-5 border border-green-300 bg-green-50"
+            className="bg-emerald-50 border border-emerald-100 p-6 rounded-none mb-12 flex items-center justify-between"
           >
-            <div className="flex items-center justify-center w-10 h-10 bg-green-100 border border-green-300 shrink-0">
-              <CheckCircle2 className="w-5 h-5 text-green-700" />
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-emerald-500 rounded-none flex items-center justify-center text-white">
+                <ShieldCheck size={20} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-emerald-900">Profile Complete — You're Eligible to Create Events</h4>
+                <p className="text-xs text-emerald-700/70">Phone verified and payout method configured. You can now publish events on Zenvy.</p>
+              </div>
             </div>
-            <div className="flex-1">
-              <div className="text-[14px] font-bold text-green-800 uppercase tracking-wider mb-0.5">Profile Complete — You're Eligible to Create Events</div>
-              <div className="text-[13px] text-green-700">Phone verified and payout method configured. You can now publish events on Zenvy.</div>
-            </div>
-            <a href="/host/events/create" className="shrink-0 flex items-center gap-2 bg-green-700 text-white text-[13px] font-semibold px-5 py-2.5 hover:bg-green-800 transition-colors">
-              Create Event <ArrowRight className="w-3.5 h-3.5" />
+            <a href="/host/events/create" className="bg-emerald-600 text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all">
+              Create Event
             </a>
           </motion.div>
-        )}
-        {!profileComplete && !loadingProfile && (
-          <motion.div
-            initial={{ opacity: 0, y: -12 }}
+        ) : (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            className="flex items-center gap-4 px-6 py-5 border border-amber-200 bg-amber-50"
+            className="bg-indigo-50 border border-indigo-100 p-6 rounded-none mb-12 flex items-center justify-between"
           >
-            <div className="flex items-center justify-center w-10 h-10 bg-amber-100 border border-amber-200 shrink-0">
-              <AlertCircle className="w-5 h-5 text-amber-600" />
-            </div>
-            <div className="flex-1">
-              <div className="text-[14px] font-bold text-amber-800 uppercase tracking-wider mb-0.5">Profile Incomplete</div>
-              <div className="text-[13px] text-amber-700">
-                {!isPhoneVerified && !payoutSet && 'Verify your phone number and configure a payout method to create events.'}
-                {!isPhoneVerified && payoutSet && 'Verify your phone number to become eligible to create events.'}
-                {isPhoneVerified && !payoutSet && 'Configure a payout method to become eligible to create events.'}
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-indigo-500 rounded-none flex items-center justify-center text-white">
+                <AlertCircle size={20} />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-indigo-900 uppercase tracking-widest text-[11px]">Note: Complete Your Profile</h4>
+                <p className="text-xs text-indigo-700/70">Verify your phone number and add a payment method to create events.</p>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* ── Main Content ── */}
-      <div className="flex flex-col lg:flex-row gap-8">
-
-      {/* ── Left Column ── */}
-      <div className="w-full lg:w-1/3 flex flex-col gap-6">
-
-        {/* Balance Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-wix-border-light p-8"
-        >
-          <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider mb-2">Available Balance</h2>
-          <div className="text-[32px] font-medium tracking-tight text-wix-text-dark mb-6"><span className="text-[16px]">BDT</span> 0.00</div>
-          <div className="flex gap-4">
-            <button className="flex-1 bg-wix-purple text-white py-3 px-4 font-semibold hover:bg-wix-purple/90 transition-colors border border-wix-purple">
-              Withdraw
-            </button>
-            <button className="flex-1 bg-white text-wix-text-dark py-3 px-4 font-semibold hover:bg-gray-50 transition-colors border border-wix-text-dark">
-              Add Funds
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Phone Verification Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05 }}
-          className="bg-white border border-wix-border-light p-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider">Phone Verification</h2>
-            {isPhoneVerified
-              ? <span className="flex items-center gap-1 text-[11px] font-bold uppercase tracking-widest text-green-700 bg-green-50 border border-green-300 px-2 py-1"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span>
-              : <AlertCircle className="w-5 h-5 text-amber-500" />}
-          </div>
-          {isPhoneVerified && verifiedPhoneNumber && (
-            <div className="mb-4 flex items-center gap-2 text-[13px] text-gray-600 bg-green-50 border border-green-200 px-3 py-2">
-              <Smartphone className="w-3.5 h-3.5 text-green-600 shrink-0" />
-              <span className="font-mono font-medium text-green-800">{verifiedPhoneNumber}</span>
-              <span className="text-green-600 ml-auto">✓ Phone verified</span>
+      <div className="grid lg:grid-cols-3 gap-12">
+        {/* Left Sidebar */}
+        <div className="lg:col-span-1 space-y-8">
+          {/* Available Balance */}
+          <div className="bg-white border border-wix-border-light p-8 rounded-none shadow-sm">
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-wix-text-muted mb-4 block">Available Balance</span>
+            <div className="flex items-baseline gap-2 mb-8">
+              <span className="text-sm font-medium text-wix-text-muted">BDT</span>
+              <span className="text-4xl font-serif font-bold text-wix-text-dark">0.00</span>
             </div>
-          )}
-          <div className="flex flex-col gap-4">
-            <div className="relative">
-              <input
-                type="tel"
-                value={phoneNumber}
-                onChange={e => setPhoneNumber(e.target.value)}
-                disabled={isPhoneVerified}
-                className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none disabled:bg-gray-50 disabled:text-gray-500"
-                placeholder="+880 1XXX XXXXXX"
-              />
-              <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <div className="grid grid-cols-2 gap-4">
+              <button className="bg-wix-purple text-white py-3 rounded-none text-xs font-bold uppercase tracking-widest hover:bg-wix-purple/90 transition-all">
+                Withdraw
+              </button>
+              <button className="bg-white border border-wix-border-light text-wix-text-dark py-3 rounded-none text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition-all">
+                Add Funds
+              </button>
             </div>
-            {!isPhoneVerified ? (
-              <button
-                onClick={handleSendOtp}
-                disabled={sendingOtp}
-                className="w-full bg-white text-wix-text-dark py-3 px-4 font-semibold hover:bg-gray-50 transition-colors border border-wix-text-dark flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {sendingOtp && <Loader2 className="w-4 h-4 animate-spin" />}
-                {sendingOtp ? 'Sending Code...' : 'Verify Number'}
-              </button>
-            ) : (
-              <button
-                onClick={() => { setIsPhoneVerified(false); setVerifiedPhoneNumber(null); setPhoneNumber('+880'); }}
-                className="w-full text-[13px] text-gray-500 py-2 border border-gray-200 hover:border-black hover:text-black transition-colors"
-              >
-                Change Verified Number
-              </button>
+          </div>
+
+          {/* Phone Verification */}
+          <div className="bg-white border border-wix-border-light p-8 rounded-none shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-wix-text-muted">Phone Verification</span>
+              {isPhoneVerified && (
+                <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[9px] font-bold uppercase tracking-widest border border-emerald-100 rounded-none">
+                  <ShieldCheck size={10} /> Verified
+                </span>
+              )}
+            </div>
+            
+            {isPhoneVerified && verifiedPhoneNumber && (
+              <div className="bg-emerald-50/50 border border-emerald-100 p-4 mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3 text-emerald-700">
+                  <Smartphone size={16} />
+                  <span className="text-sm font-medium">{verifiedPhoneNumber}</span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                  <CheckCircle2 size={12} /> verified
+                </span>
+              </div>
             )}
-          </div>
-        </motion.div>
 
-        {/* Current Plan Panel */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white border border-wix-border-light p-8 flex flex-col"
-        >
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider mb-2">Current Plan</h2>
-              <div className="text-[24px] font-semibold text-wix-text-dark">Zenvy Organizer</div>
-            </div>
-            <span className="bg-[#d9f7a3] text-[#2e4d00] text-[11px] font-bold px-3 py-1 uppercase tracking-widest border border-[#c4e48b]">Exclusive</span>
-          </div>
-          <ul className="flex flex-col gap-3 mb-8 text-[15px] text-wix-text-dark">
-            <li className="flex justify-between border-b border-gray-100 pb-2">
-              <span className="text-gray-500">Platform Fee</span>
-              <span className="font-medium">0% / sale</span>
-            </li>
-            <li className="flex justify-between border-b border-gray-100 pb-2">
-              <span className="text-gray-500">Events Limit</span>
-              <span className="font-medium">Unlimited</span>
-            </li>
-            <li className="flex justify-between pb-2">
-              <span className="text-gray-500">Payout Window</span>
-              <span className="font-medium">T+7 days</span>
-            </li>
-          </ul>
-          <button className="w-full text-wix-text-dark py-3 px-4 font-semibold hover:bg-gray-50 transition-colors border border-wix-text-dark">
-            View Plan Details
-          </button>
-        </motion.div>
-
-        {/* Recent Activity */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white border border-wix-border-light p-8"
-        >
-          <h2 className="text-[15px] text-wix-text-muted font-medium uppercase tracking-wider mb-6">Recent Activity</h2>
-          <div className="flex flex-col gap-5">
-            <div className="flex justify-between items-center group cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
-                  <Globe className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[15px] font-medium text-wix-text-dark">Ticket Payout</span>
-                  <span className="text-[13px] text-gray-500">No payouts yet</span>
-                </div>
+            {!isPhoneVerified && (
+              <div className="relative mb-6">
+                <input 
+                  type="text" 
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  className="w-full bg-gray-50 border border-wix-border-light p-4 pr-12 text-sm font-medium focus:outline-none focus:border-wix-purple transition-colors"
+                  placeholder="+8801XXXXXXXXX"
+                />
+                <Smartphone className="absolute right-4 top-1/2 -translate-y-1/2 text-wix-text-muted/30" size={18} />
               </div>
-              <span className="text-[15px] font-medium text-wix-text-dark">৳—</span>
+            )}
+
+            <button 
+              onClick={isPhoneVerified ? () => { setIsPhoneVerified(false); setVerifiedPhoneNumber(null); } : handleSendOtp}
+              disabled={sendingOtp}
+              className="w-full py-4 border border-wix-border-light text-[10px] font-bold uppercase tracking-widest text-wix-text-dark hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+            >
+              {sendingOtp && <Loader2 size={14} className="animate-spin" />}
+              {isPhoneVerified ? 'Change Verified Number' : (sendingOtp ? 'Sending Otp...' : 'Verify Number')}
+            </button>
+          </div>
+
+          {/* Current Plan */}
+          <div className="bg-white border border-wix-border-light p-8 rounded-none shadow-sm">
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-wix-text-muted">Current Plan</span>
+              <span className="px-2 py-0.5 bg-lime-100 text-lime-700 text-[9px] font-bold uppercase tracking-widest rounded-none">
+                Exclusive
+              </span>
             </div>
-            <div className="flex justify-between items-center group cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 border border-gray-200 bg-gray-50 flex items-center justify-center group-hover:bg-gray-100 transition-colors">
-                  <ArrowDownLeft className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[15px] font-medium text-wix-text-dark">Funds Added</span>
-                  <span className="text-[13px] text-gray-500">—</span>
-                </div>
+            
+            <h3 className="text-2xl font-serif mb-8 text-wix-text-dark">Zenvy Organizer</h3>
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-wix-text-muted">Platform Fee</span>
+                <span className="font-medium text-wix-text-dark">0% / sale</span>
               </div>
-              <span className="text-[15px] font-medium text-green-700">৳—</span>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-wix-text-muted">Events Limit</span>
+                <span className="font-medium text-wix-text-dark">Unlimited</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-wix-text-muted">Payout Window</span>
+                <span className="font-medium text-wix-text-dark">T+7 days</span>
+              </div>
             </div>
           </div>
-          <button className="text-[14px] text-wix-purple font-medium hover:opacity-80 mt-6 flex items-center gap-1">
-            View all transactions <ArrowRight className="w-3 h-3" />
-          </button>
-        </motion.div>
-      </div>
+        </div>
 
-      {/* ── Right Column: Payment Methods & 3D Card ── */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="w-full lg:w-2/3 bg-white border border-wix-border-light p-8 lg:p-12 flex flex-col"
-      >
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-12">
+          {/* Payout Method Header */}
           <div>
-            <h1 className="text-[32px] font-medium tracking-tight text-wix-text-dark leading-none mb-2">Payout Method</h1>
-            <p className="text-[15px] text-wix-text-muted">Configure where you receive event ticket payouts.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {paymentMethods.map(method => (
-              <button
-                key={method.id}
-                onClick={() => setSelectedMethod(method.id)}
-                className={`flex items-center gap-2 px-4 py-2 border transition-all ${
-                  selectedMethod === method.id
-                    ? 'border-black bg-black text-white'
-                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-400'
-                }`}
-              >
-                {method.icon}
-                <span className="text-[13px] font-semibold">{method.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Interactive Card Preview */}
-        <div className="w-full bg-wix-gray-bg border border-wix-border-light p-8 lg:p-16 mb-10 flex flex-col items-center justify-center overflow-hidden relative group">
-          <div className="absolute top-4 left-4 text-[11px] font-bold tracking-widest text-gray-400 uppercase">Interactive Preview</div>
-          <PaymentCard
-            type={selectedMethod}
-            details={selectedMethod === 'card' ? cardDetails : mfsDetails}
-            color={currentMethod.color}
-            accentColor={currentMethod.accent}
-            logo={currentMethod.icon}
-          />
-          <div className="mt-8 flex gap-2 items-center opacity-60 group-hover:opacity-100 transition-opacity">
-            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5" />
-            </svg>
-            <span className="text-[13px] text-gray-500 font-medium tracking-wide">Hover to interact</span>
-          </div>
-        </div>
-
-        {/* Add / Edit Form */}
-        <div className="w-full max-w-[520px] mx-auto">
-          <h3 className="text-[20px] font-medium text-wix-text-dark mb-6 border-b border-wix-border-light pb-4">
-            {selectedMethod === 'card' ? 'Add Payout Card' : `Configure ${currentMethod.name} Payout`}
-          </h3>
-          <form className="flex flex-col gap-6" onSubmit={e => e.preventDefault()}>
-            {selectedMethod === 'card' ? (
-              <>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-wix-text-dark">Name on Card</label>
-                  <input
-                    type="text"
-                    value={cardDetails.name}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
-                    placeholder="Jane Doe"
-                    onChange={e => setCardDetails(p => ({ ...p, name: e.target.value.toUpperCase() }))}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-wix-text-dark">Card Number</label>
-                  <input
-                    type="text"
-                    value={cardDetails.number}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] font-mono outline-none"
-                    placeholder="0000 0000 0000 0000"
-                    maxLength={19}
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
-                      setCardDetails(p => ({ ...p, number: val }));
-                    }}
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-6">
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label className="text-[14px] font-medium text-wix-text-dark">Expiry Date</label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
-                      placeholder="MM/YY"
-                      maxLength={5}
-                      onChange={e => setCardDetails(p => ({ ...p, expiry: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label className="text-[14px] font-medium text-wix-text-dark">Security Code (CVC)</label>
-                    <input
-                      type="password"
-                      className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
-                      placeholder="***"
-                      maxLength={4}
-                    />
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-wix-text-dark">Account Name</label>
-                  <input
-                    type="text"
-                    value={mfsDetails.name}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] outline-none"
-                    placeholder="Jane Doe"
-                    onChange={e => setMfsDetails(p => ({ ...p, name: e.target.value.toUpperCase() }))}
-                  />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[14px] font-medium text-wix-text-dark">{currentMethod.name} Payout Number</label>
-                  <input
-                    type="text"
-                    value={mfsDetails.number}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 hover:border-black focus:border-black transition-colors text-[15px] font-mono outline-none"
-                    placeholder="01XXX XXXXXX"
-                    onChange={e => setMfsDetails(p => ({ ...p, number: e.target.value }))}
-                  />
-                </div>
-              </>
-            )}
-            <div className="flex items-center gap-3 mt-2">
-              <input type="checkbox" id="default-method" className="w-4 h-4 accent-black cursor-pointer" defaultChecked />
-              <label htmlFor="default-method" className="text-[14px] text-wix-text-dark cursor-pointer">
-                Set as default payout method
-              </label>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+              <div>
+                <h2 className="text-3xl sm:text-4xl font-serif mb-2 text-wix-text-dark">Payout Method</h2>
+                <p className="text-sm text-wix-text-muted font-light">Configure where you receive event ticket payouts.</p>
+              </div>
+              
+              <div className="flex flex-wrap gap-2">
+                {paymentMethods.map((method) => (
+                  <button
+                    key={method.id}
+                    onClick={() => setSelectedMethod(method.id as any)}
+                    className={`px-4 py-2.5 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest border transition-all ${
+                      selectedMethod === method.id 
+                        ? 'bg-wix-text-dark text-white border-wix-text-dark' 
+                        : 'bg-white border-wix-border-light text-wix-text-muted hover:border-wix-text-dark'
+                    }`}
+                  >
+                    {method.icon} {method.name}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="mt-4 border-t border-wix-border-light pt-6 flex justify-end gap-4">
-              <button type="button" className="px-6 py-3 font-semibold text-wix-text-dark hover:bg-gray-100 transition-colors border border-transparent">
-                Cancel
-              </button>
-              <button
-                type="button"
+
+            {/* Interactive Preview */}
+            <div className="bg-gray-50 border border-wix-border-light p-4 sm:p-12 rounded-none relative overflow-hidden group">
+              <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-wix-text-muted/30 mb-6 sm:mb-12 text-center">Interactive Preview</div>
+              
+              <div className="flex justify-center mb-12">
+                <motion.div 
+                  className={`w-full max-w-[400px] aspect-[1.6/1] rounded-[2rem] p-6 sm:p-10 relative shadow-2xl transition-colors duration-500 overflow-hidden ${
+                    selectedMethod === 'bkash' ? 'bg-[#D12053]' : 
+                    selectedMethod === 'nagad' ? 'bg-[#F7941D]' :
+                    selectedMethod === 'rocket' ? 'bg-[#8C3494]' :
+                    selectedMethod === 'upay' ? 'bg-[#005C99]' : 'bg-slate-900'
+                  }`}
+                >
+                  <div className="absolute top-0 right-0 w-32 h-32 sm:w-64 sm:h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl sm:blur-3xl opacity-50 pointer-events-none" />
+                  
+                  <div className="relative z-10 h-full flex flex-col justify-between">
+                    <div className="flex justify-between items-start">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white font-bold text-xs">
+                        {currentMethod.icon}
+                      </div>
+                      <div className="text-white/40 font-bold italic tracking-widest uppercase text-base sm:text-xl">
+                        {selectedMethod.toUpperCase()}
+                      </div>
+                    </div>
+
+                    <div className="my-auto py-4">
+                      <div className="text-lg sm:text-2xl md:text-3xl text-white font-mono tracking-[0.15em] break-all">
+                        {selectedMethod === 'card' 
+                          ? (cardDetails.number || '**** **** **** 1234')
+                          : (mfsDetails.number || '01XXX XXXXXX')
+                        }
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <div className="text-[8px] uppercase tracking-widest text-white/40 mb-1">Account Name</div>
+                        <div className="text-[10px] sm:text-sm font-bold text-white uppercase tracking-widest truncate max-w-[120px] sm:max-w-[200px]">
+                          {selectedMethod === 'card' ? cardDetails.name : mfsDetails.name || 'Your Name'}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[8px] uppercase tracking-widest text-white/40 mb-1">Status</div>
+                        <div className="text-[10px] sm:text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                          Verified
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-wix-text-muted/30">
+                <RotateCw size={12} /> Hover to interact
+              </div>
+            </div>
+          </div>
+
+          {/* Configuration Form */}
+          <div className="pt-12 border-t border-wix-border-light">
+            <h3 className="text-2xl font-serif mb-8 text-wix-text-dark">Configure {currentMethod.name} Payout</h3>
+            
+            <form className="space-y-8 w-full max-w-[720px]" onSubmit={(e) => e.preventDefault()}>
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase tracking-widest opacity-40 font-bold text-wix-text-dark">Account Name</label>
+                <input 
+                  type="text" 
+                  value={selectedMethod === 'card' ? cardDetails.name : mfsDetails.name}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase();
+                    if (selectedMethod === 'card') setCardDetails(p => ({ ...p, name: val }));
+                    else setMfsDetails(p => ({ ...p, name: val }));
+                  }}
+                  className="w-full bg-transparent border-b border-wix-border-light py-4 focus:outline-none focus:border-wix-text-dark transition-colors text-lg font-serif text-wix-text-dark" 
+                  placeholder="ARIFUL ISLAM"
+                />
+              </div>
+
+              {selectedMethod === 'card' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-widest opacity-40 font-bold text-wix-text-dark">Card Number</label>
+                    <input 
+                      type="text" 
+                      value={cardDetails.number}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+                        setCardDetails(p => ({ ...p, number: val }));
+                      }}
+                      placeholder="**** **** **** 1234" 
+                      className="w-full bg-transparent border-b border-wix-border-light py-4 focus:outline-none focus:border-wix-text-dark transition-colors text-lg font-serif text-wix-text-dark" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase tracking-widest opacity-40 font-bold text-wix-text-dark">Expiry Date</label>
+                    <input 
+                      type="text" 
+                      value={cardDetails.expiry}
+                      onChange={(e) => setCardDetails(p => ({ ...p, expiry: e.target.value }))}
+                      placeholder="MM/YY" 
+                      className="w-full bg-transparent border-b border-wix-border-light py-4 focus:outline-none focus:border-wix-text-dark transition-colors text-lg font-serif text-wix-text-dark" 
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase tracking-widest opacity-40 font-bold text-wix-text-dark">{currentMethod.name} Number</label>
+                  <input 
+                    type="text" 
+                    value={mfsDetails.number}
+                    onChange={(e) => setMfsDetails(p => ({ ...p, number: e.target.value }))}
+                    className="w-full bg-transparent border-b border-wix-border-light py-4 focus:outline-none focus:border-wix-text-dark transition-colors text-lg font-serif text-wix-text-dark" 
+                    placeholder="01921296777"
+                  />
+                </div>
+              )}
+
+              <button 
                 onClick={handleSavePayment}
                 disabled={savingPayment}
-                className="bg-wix-text-dark text-white px-8 py-3 font-semibold hover:bg-black transition-colors border border-black flex items-center gap-2 disabled:opacity-50"
+                className="bg-wix-text-dark text-white px-10 py-5 rounded-none text-[10px] font-bold uppercase tracking-[0.3em] hover:bg-black transition-all flex items-center gap-2"
               >
-                {savingPayment && <Loader2 className="w-4 h-4 animate-spin" />}
-                {savingPayment ? 'Saving...' : `Save ${selectedMethod === 'card' ? 'Card' : 'Payout Method'}`}
+                {savingPayment && <Loader2 size={14} className="animate-spin" />}
+                {savingPayment ? 'Saving...' : 'Save Configuration'}
               </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* OTP Modal */}
       <OtpModal
         isOpen={showOtpModal}
         onClose={() => setShowOtpModal(false)}
@@ -739,7 +599,6 @@ export function Profile() {
         verifying={verifyingOtp}
         resending={resendingOtp}
       />
-      </div>{/* End Main Content */}
     </div>
   );
 }

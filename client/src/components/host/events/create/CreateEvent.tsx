@@ -565,7 +565,7 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white mt-20">
       <div className="max-w-[600px] mx-auto px-6 py-12">
         {/* Top nav: back + step dots */}
         <div className="mb-10 flex justify-between items-center">

@@ -388,7 +388,7 @@ export default function Events() {
                 </button>
               )}
             </div>
-            <div className="grid grid-cols-1 mx-[3vw] sm:grid-cols-2 md:grid-cols-2 lg:mx-0 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-12 mb-10">
+            <div className="grid grid-cols-1 mx-[3vw] sm:grid-cols-2 md:grid-cols-2 lg:mx-0 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3 gap-12 mb-10">
               {events.length > 0 ? events.map((event: any, i: number) => (
                 <EventCard key={event._id} event={event} index={i} router={router} />
               )) : (

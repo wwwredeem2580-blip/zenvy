@@ -17,6 +17,8 @@ import {
   Menu, X, Globe,
   Wallet as WalletIcon, Users as UsersIcon,
   LayoutDashboard, Home, LogIn, UserPlus,
+  TrendingUp, TrendingDown,
+  ChevronRight as ChevronRightIcon
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { authService } from '@/lib/api/auth';
@@ -134,11 +136,11 @@ const FunnelChart = ({ metrics }: { metrics: DashboardMetrics | null }) => {
       {steps.map((step, i) => (
         <div className="flex flex-col items-center w-full" key={i}>
           <div
-            className={`h-10 sm:h-11 flex items-center justify-between px-3 sm:px-5 text-white hover:opacity-90 transition-opacity cursor-pointer ${step.color}`}
+            className={`min-w-fit h-10 sm:h-11 flex items-center justify-between px-3 sm:px-5 text-white hover:opacity-90 transition-opacity cursor-pointer ${step.color}`}
             style={{ width: step.width }}
           >
-            <span className="text-[11px] sm:text-[12px] font-medium tracking-wide truncate mr-2">{step.label}</span>
-            <span className="font-mono text-[11px] sm:text-[13px] shrink-0">{step.value.toLocaleString()}</span>
+            <span className="text-[10px] sm:text-[12px] font-medium tracking-wide truncate mr-2 sm:mr-4">{step.label}</span>
+            <span className="font-mono text-[10px] sm:text-[13px] font-bold shrink-0">{step.value.toLocaleString()}</span>
           </div>
           {i < steps.length - 1 && (
             <div className="text-[11px] font-bold text-gray-400 my-1">
@@ -238,7 +240,7 @@ const EventTable = ({ events, loading, router, onDelete }: { events: any[]; load
                   </span>
                 </td>
                 <td className="py-4 pr-3 text-right">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-end gap-2 transition-opacity">
                     {isDraft && (
                       <button
                         onClick={() => onDelete(event.eventId)}
@@ -288,6 +290,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'orders'>('overview');
 
   const avatarSeed = user?.email ?? 'default';
 
@@ -606,209 +609,276 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
           </motion.div>
       )}
 
-      <main className="max-w-[1400px] mx-auto w-full px-4 sm:px-6 py-8 sm:py-10 flex flex-col gap-10">
-
+      <main className="max-w-[1400px] mx-auto w-full px-2 sm:px-4 lg:px-6 py-4 sm:py-8 flex flex-col gap-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-wix-border-light pb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3 sm:gap-4 border-b border-wix-border-light pb-4 sm:pb-6">
           <div>
-            <h1 className="text-[32px] sm:text-[36px] font-medium tracking-tight text-wix-text-dark leading-none mb-2">
-              Events Overview
+            <h1 className="text-[32px] sm:text-[40px] font-medium tracking-tight text-wix-text-dark leading-none mb-2">
+              Dashboard
             </h1>
-            <p className="text-[14px] text-wix-text-muted">
-              High-level metrics and performance across {user?.firstName ? `${user.firstName}'s` : 'your'} active events.
-            </p>
+            <p className="text-wix-text-muted font-light">Manage your events and track performance.</p>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <div className="flex gap-4">
             <button
               onClick={() => router.push('/host/events/create')}
-              className="flex items-center gap-2 bg-wix-text-dark text-white px-4 py-2 sm:px-5 sm:py-2.5 text-[12px] sm:text-[13px] font-bold hover:bg-wix-purple transition-colors border border-wix-text-dark whitespace-nowrap"
+              className="bg-wix-text-dark text-white px-6 py-3 rounded-none text-sm font-bold uppercase tracking-widest flex items-center gap-2 hover:bg-black transition-all"
             >
-              <Plus className="w-4 h-4" /> New Event
+              <Plus size={18} /> New Event
             </button>
             <button
               onClick={() => router.push('/host/profile')}
-              className="flex items-center gap-2 border border-wix-border-light bg-white px-4 py-2 sm:px-5 sm:py-2.5 text-[12px] sm:text-[13px] font-medium hover:border-wix-text-dark transition-colors whitespace-nowrap"
+              className="bg-white border border-wix-border-light text-wix-text-dark px-6 py-3 rounded-none text-sm font-bold uppercase tracking-widest hover:border-wix-text-dark transition-all"
             >
               Profile
             </button>
           </div>
         </div>
 
-        {/* Guide banner */}
-        {/* {showGuide && !loading && (
-          <div className="flex items-start sm:items-center gap-4 p-4 bg-wix-purple/5 border border-wix-purple/20">
-            <div className="flex-1 text-[13px] text-wix-text-dark leading-relaxed">
-              <span className="font-bold text-wix-purple mr-1">Recommended:</span>
-              Complete the{' '}
-              <Link href="/learn/host-guide" className="text-wix-purple hover:underline font-medium">Host Operational Guide</Link>,{' '}
-              <Link href="/learn/how-to-host-event" className="text-wix-purple hover:underline font-medium">How to Host</Link>, and{' '}
-              <Link href="/learn/organizer-guidelines" className="text-wix-purple hover:underline font-medium">Organizer Guidelines</Link>{' '}
-              before creating an event.
-            </div>
-            <button onClick={() => setShowGuide(false)} className="text-wix-text-muted hover:text-wix-text-dark shrink-0 text-[18px] leading-none">×</button>
-          </div>
-        )} */}
-        {/* Note banner */}
-        {showNote && !loading && (
-          <div className="flex items-start sm:items-center gap-4 p-4 bg-wix-purple/5 border border-wix-purple/20">
-            <div className="flex-1 text-[13px] text-wix-text-dark leading-relaxed">
-              <span className="font-bold text-wix-purple mr-1">Note:</span>
-              You Must Complete Your{' '}
-              <Link href="/host/profile" className="text-wix-purple hover:underline font-medium">Profile</Link>{' '}
-              before creating an event. Just verify your phone number and add a payment method to your profile to create an event.
-            </div>
-            <button onClick={() => setShowNote(false)} className="text-wix-text-muted hover:text-wix-text-dark shrink-0 text-[18px] leading-none">×</button>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="p-4 bg-red-50 border border-red-200 text-[13px] text-red-600">
-            {error} — <button onClick={() => window.location.reload()} className="underline">Retry</button>
-          </div>
-        )}
-
-        {/* KPIs */}
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 border-t border-l border-wix-border-light">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="border-r border-b border-wix-border-light p-6 animate-pulse">
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4" />
-                <div className="h-7 bg-gray-200 rounded w-3/4" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 border-t border-l border-wix-border-light">
-            {kpiCards.map((card, i) => (
-              <KPICard key={i} {...card} />
-            ))}
-          </div>
-        )}
-
-        {/* Charts row */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Revenue by Event */}
-          <div className="bg-white border border-wix-border-light p-7 flex flex-col">
-            <h2 className="text-[17px] font-medium text-wix-text-dark mb-1">Revenue by Event</h2>
-            <p className="text-[12px] text-wix-text-muted mb-5">Top performing events this period</p>
-            {loading
-              ? <div className="animate-pulse h-40 bg-gray-100 rounded" />
-              : <RevenueBarChart events={events} />
-            }
-          </div>
-
-          {/* Conversion Funnel */}
-          <div className="bg-white border border-wix-border-light p-7 flex flex-col">
-            <h2 className="text-[17px] font-medium text-wix-text-dark mb-1">Conversion Funnel</h2>
-            <p className="text-[12px] text-wix-text-muted mb-4">Page view → purchase (all active events)</p>
-            <FunnelChart metrics={metrics} />
-          </div>
-        </div>
-
-        {/* Event Performance Table */}
-        <div className="bg-white border border-wix-border-light p-7 flex flex-col">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-7 gap-4">
-            <div>
-              <h2 className="text-[18px] font-medium text-wix-text-dark mb-1">Event Performance</h2>
-              <p className="text-[13px] text-wix-text-muted">Live and published events with real-time metrics.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-              {/* Status Filter */}
-              <div className="relative">
-                <select
-                  value={statusFilter}
-                  onChange={e => { setStatusFilter(e.target.value); setShowAllEvents(false); }}
-                  className="border border-wix-border-light pl-3 pr-8 py-2 text-[13px] focus:border-wix-text-dark outline-none transition-colors appearance-none bg-white cursor-pointer"
-                >
-                  <option value="all">All Statuses</option>
-                  <option value="approved">Approved</option>
-                  <option value="live">Live</option>
-                  <option value="published">Published</option>
-                  <option value="pending_approval">Pending</option>
-                  <option value="draft">Draft</option>
-                  <option value="ended">Ended</option>
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-2.5 text-gray-400 pointer-events-none" />
-              </div>
-              {/* Search */}
-              <div className="relative flex-1 min-w-[140px]">
-                <input
-                  type="text"
-                  placeholder="Search events..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="border border-wix-border-light px-4 py-2 text-[13px] w-full sm:w-[200px] focus:border-wix-text-dark outline-none transition-colors"
-                />
-                <Search className="w-3.5 h-3.5 absolute right-3 top-2.5 text-gray-400" />
-              </div>
-            </div>
-          </div>
-
-          <EventTable events={filteredEvents} loading={loading} router={router} onDelete={handleDeleteEvent} />
-
-          <div className="mt-6 flex justify-between items-center pt-4 border-t border-wix-border-light">
-            <span className="text-[12px] text-wix-text-muted">
-              {showAllEvents ? sortedEvents.length : Math.min(sortedEvents.length, 5)} of {sortedEvents.length} events
-            </span>
-            {sortedEvents.length > 5 && (
-              <button
-                onClick={() => setShowAllEvents(v => !v)}
-                className="text-[13px] font-bold text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
-              >
-                {showAllEvents ? 'Show less ↑' : `View all ${sortedEvents.length} events ↓`}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Recent Sales */}
-        <div className="bg-white border border-wix-border-light p-7 flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-[18px] font-medium text-wix-text-dark mb-1">Recent Sales</h2>
-              <p className="text-[13px] text-wix-text-muted">Latest incoming ticket orders</p>
-            </div>
+        {/* Tabs */}
+        <div className="flex gap-4 sm:gap-8 border-b border-wix-border-light mb-4 sm:mb-6 overflow-x-auto no-scrollbar pb-1">
+          {[
+            { id: 'overview', label: 'Overview' },
+            { id: 'events', label: 'Events' },
+            { id: 'orders', label: 'Orders' },
+          ].map((tab) => (
             <button
-              onClick={handleToggleAllOrders}
-              disabled={loadingAllOrders}
-              className="flex items-center gap-1 text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border-b border-wix-text-dark pb-0.5 hover:text-wix-purple hover:border-wix-purple transition-colors"
+              key={tab.id}
+              onClick={() => {
+                setActiveTab(tab.id as any);
+                if (tab.id === 'orders' && allOrders.length === 0) handleToggleAllOrders();
+              }}
+              className={`pb-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${activeTab === tab.id ? 'text-wix-text-dark' : 'text-wix-text-muted/60 hover:text-wix-text-dark'}`}
             >
-              {loadingAllOrders
-                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                : showAllOrders ? 'Show less ↑' : 'See All ↓'}
+              {tab.label}
+              {activeTab === tab.id && (
+                <motion.div layoutId="dash-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-wix-text-dark" />
+              )}
             </button>
-          </div>
+          ))}
+        </div>
 
-          {loading ? (
-            <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-wix-purple" /></div>
-          ) : (() => {
-            const displayOrders = showAllOrders ? allOrders : recentOrders;
-            return displayOrders.length === 0 ? (
-              <div className="text-center py-10 text-[14px] text-wix-text-muted">No recent orders</div>
-            ) : (
-              <div className="flex flex-col divide-y divide-wix-border-light">
-                {displayOrders.map((order, i) => (
-                  <div key={i} className="flex items-center justify-between py-3 sm:py-4 hover:bg-gray-50 transition-colors -mx-2 px-2 gap-3">
-                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                      <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gray-100 border border-wix-border-light flex items-center justify-center shrink-0">
-                        <ShoppingBag className="w-4 h-4 text-wix-text-muted" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-medium text-wix-text-dark line-clamp-1 max-w-[140px] sm:max-w-[260px]">{order.eventTitle}</p>
-                        <p className="text-[11px] text-wix-text-muted truncate">{order.orderNumber}</p>
-                      </div>
-                    </div>
-                    <span className="font-mono text-[13px] sm:text-[14px] font-semibold text-wix-text-dark flex items-center gap-0.5 shrink-0">
-                      <BDTIcon className="text-[12px]" />{order.total?.toLocaleString()}
+        <section className="min-h-[400px]">
+          {activeTab === 'overview' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              {/* Alert */}
+              {showNote && (
+                <div className="bg-wix-purple/5 border border-wix-purple/20 p-4 mb-12 flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="font-bold text-wix-purple uppercase tracking-widest text-[11px]">Note:</span>
+                    <span className="text-wix-text-dark/80">
+                      You Must Complete Your <Link href="/host/profile" className="text-wix-purple underline cursor-pointer font-medium">Profile</Link> before creating an event. Just verify your phone number and add a payment method to your profile.
                     </span>
+                  </div>
+                  <button onClick={() => setShowNote(false)} className="text-wix-text-muted hover:text-wix-text-dark p-1">
+                    <X size={18} />
+                  </button>
+                </div>
+              )}
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-0 border border-wix-border-light rounded-none overflow-hidden mb-12 bg-white">
+                {[
+                  { label: 'Total Revenue', value: metrics?.overview?.totalRevenue ? `BDT ${metrics.overview.totalRevenue.toLocaleString()}` : '—', change: '+12.4%', up: true, trend: [20, 40, 30, 50, 40, 60] },
+                  { label: 'This Month', value: metrics?.revenueByPeriod?.thisMonth ? `BDT ${metrics.revenueByPeriod.thisMonth.toLocaleString()}` : '—', change: '+8.2%', up: true, trend: [10, 20, 15, 30, 25, 35] },
+                  { label: 'Total Orders', value: metrics?.overview?.totalOrders?.toLocaleString() ?? '—', change: '+4.1%', up: true, trend: [30, 35, 40, 38, 45, 50] },
+                  { label: 'Tickets Sold', value: metrics?.overview?.totalTicketsSold?.toLocaleString() ?? '—', change: '+6.8%', up: true, trend: [40, 45, 42, 50, 55, 60] },
+                  { label: "Today\'s Revenue", value: metrics?.recentActivity?.revenueToday ? `BDT ${metrics.recentActivity.revenueToday.toLocaleString()}` : '—', change: '+2.1%', up: (metrics?.recentActivity?.revenueToday ?? 0) >= 0, trend: [20, 15, 25, 20, 30, 25] },
+                  { label: 'Active Events', value: events.filter(e => e.status === 'live' || e.status === 'published').length.toString(), change: '', up: true, trend: [5, 5, 5, 6, 6, 6] },
+                ].map((stat, i) => (
+                  <div key={i} className="bg-white p-4 sm:p-6 border-r border-b border-wix-border-light last:border-r-0 lg:even:border-r lg:[&:nth-child(3)]:border-r">
+                    <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] font-black text-wix-text-muted mb-2 sm:mb-4">{stat.label}</div>
+                    <div className="flex items-end justify-between gap-2 mb-2 sm:mb-4">
+                      <div className="text-lg sm:text-2xl font-semibold tracking-tight text-wix-text-dark">{stat.value}</div>
+                      {stat.change && (
+                        <div className={`flex items-center gap-1 text-[10px] font-bold ${stat.up ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {stat.up ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+                          {stat.change}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-[0.1em] text-wix-text-muted/40 mb-3">vs last period</div>
+                    <div className="h-8 w-full opacity-60">
+                      <svg className="w-full h-full" viewBox="0 0 100 40" preserveAspectRatio="none">
+                        <path
+                          d={`M ${stat.trend.map((v, idx) => `${(idx * 100) / (stat.trend.length - 1)} ${40 - v}`).join(' L ')}`}
+                          fill="none"
+                          stroke={stat.up ? "#10b981" : "#f43f5e"}
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </div>
                   </div>
                 ))}
               </div>
-            );
-          })()}
-        </div>
 
+              {/* Main Content Grid */}
+              <div className="grid lg:grid-cols-2 gap-4 lg:gap-8 w-full min-w-0">
+                {/* Revenue by Event */}
+                <div className="bg-white border border-wix-border-light p-4 sm:p-6 lg:p-8 w-full overflow-hidden">
+                  <div className="mb-4 sm:mb-6">
+                    <h2 className="text-[18px] sm:text-[20px] font-semibold text-wix-text-dark mb-1 tracking-tight truncate">Revenue by Event</h2>
+                    <p className="text-[10px] sm:text-[11px] text-wix-text-muted uppercase tracking-widest font-medium truncate">Top performing events this period</p>
+                  </div>
+                  <RevenueBarChart events={events} />
+                </div>
+
+                {/* Conversion Funnel */}
+                <div className="bg-white border border-wix-border-light p-4 flex flex-col items-center w-full overflow-hidden sm:p-6 lg:p-8">
+                  <div className="mb-4 sm:mb-6 text-center lg:text-left w-full">
+                    <h2 className="text-[18px] sm:text-[20px] font-semibold text-wix-text-dark mb-1 tracking-tight truncate">Conversion Funnel</h2>
+                    <p className="text-[10px] sm:text-[11px] text-wix-text-muted uppercase tracking-widest font-medium truncate">Page view → purchase (active)</p>
+                  </div>
+                  <div className="w-full overflow-hidden">
+                    <FunnelChart metrics={metrics} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'events' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white border-y sm:border border-wix-border-light overflow-hidden p-4 sm:p-8"
+            >
+              {/* Events Tab Toolbar */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                <div>
+                  <h2 className="text-[24px] font-semibold text-wix-text-dark mb-1 tracking-tight">Event Performance</h2>
+                  <p className="text-[14px] text-wix-text-muted">Live and published events with real-time metrics.</p>
+                </div>
+                <div className="flex gap-4 w-full md:w-auto">
+                  <div className="relative flex-1 md:flex-none">
+                    <select
+                      value={statusFilter}
+                      onChange={e => setStatusFilter(e.target.value)}
+                      className="w-full md:w-48 bg-white border border-wix-border-light px-4 py-2.5 text-[12px] font-bold uppercase tracking-widest appearance-none focus:outline-none focus:border-wix-text-dark transition-colors cursor-pointer"
+                    >
+                      <option value="all">All Statuses</option>
+                      <option value="published">Published</option>
+                      <option value="draft">Draft</option>
+                      <option value="ended">Ended</option>
+                    </select>
+                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40" />
+                  </div>
+                  <div className="relative flex-1 md:flex-none">
+                    <input
+                      type="text"
+                      placeholder="Search events..."
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      className="w-full md:w-64 bg-white border border-wix-border-light px-10 py-2.5 text-[13px] focus:outline-none focus:border-wix-text-dark transition-colors"
+                    />
+                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40" />
+                  </div>
+                </div>
+              </div>
+
+              <EventTable
+                events={sortedEvents}
+                loading={loading}
+                router={router}
+                onDelete={handleDeleteEvent}
+              />
+
+              <div className="mt-8 pt-6 border-t border-wix-border-light flex justify-between items-center">
+                <span className="text-[11px] uppercase tracking-widest text-wix-text-muted font-bold">
+                  Showing {sortedEvents.length} events
+                </span>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'orders' && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white border-y sm:border border-wix-border-light overflow-hidden p-4 sm:p-8"
+            >
+              {/* Orders Tab Toolbar */}
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+                <div>
+                  <h2 className="text-[24px] font-semibold text-wix-text-dark mb-1 tracking-tight">Recent Orders</h2>
+                  <p className="text-[14px] text-wix-text-muted">Manage and track all ticket purchases across your events.</p>
+                </div>
+                <div className="flex gap-4 w-full md:w-auto">
+                  <div className="relative flex-1 md:flex-none">
+                    <input
+                      type="text"
+                      placeholder="Search orders..."
+                      className="w-full md:w-64 bg-white border border-wix-border-light px-10 py-2.5 text-[13px] focus:outline-none focus:border-wix-text-dark transition-colors"
+                    />
+                    <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 opacity-40" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Orders Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[800px]">
+                  <thead>
+                    <tr className="border-b-2 border-wix-text-dark text-[11px] uppercase tracking-[0.2em] font-bold text-wix-text-muted">
+                      <th className="px-3 py-6">Order #</th>
+                      <th className="px-3 py-6">Event Title</th>
+                      <th className="px-3 py-6">Price</th>
+                      <th className="px-3 py-6">Date</th>
+                      <th className="px-3 py-6 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-wix-border-light">
+                    {loadingAllOrders ? (
+                      <tr><td colSpan={5} className="py-20 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-wix-purple" /></td></tr>
+                    ) : allOrders.length === 0 && recentOrders.length === 0 ? (
+                      <tr><td colSpan={5} className="py-20 text-center text-wix-text-muted text-[14px]">No orders found yet</td></tr>
+                    ) : (
+                      (allOrders.length > 0 ? allOrders : recentOrders).map((order) => (
+                        <tr key={order.orderNumber} className="hover:bg-gray-50 transition-colors group">
+                          <td className="px-3 py-6">
+                            <div className="text-[14px] font-bold text-wix-text-dark">{order.orderNumber}</div>
+                          </td>
+                          <td className="px-3 py-6">
+                            <div className="text-[14px] font-medium text-wix-text-dark truncate max-w-[300px]">{order.eventTitle}</div>
+                          </td>
+                          <td className="px-3 py-6">
+                            <div className="text-[14px] font-semibold text-wix-text-dark flex items-center gap-0.5">
+                              <BDTIcon className="text-[12px]" />{order.total?.toLocaleString()}
+                            </div>
+                          </td>
+                          <td className="px-3 py-6">
+                            <div className="text-[11px] uppercase tracking-widest text-wix-text-muted font-medium">
+                              {new Date(order.createdAt).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </div>
+                          </td>
+                          <td className="px-3 py-6 text-right">
+                            <button className="p-2 hover:bg-white border border-transparent hover:border-wix-border-light transition-all">
+                              <ChevronRightIcon size={16} className="text-wix-text-muted" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table Footer */}
+              <div className="mt-8 pt-6 border-t border-wix-border-light flex justify-between items-center">
+                <div className="text-[11px] uppercase tracking-widest text-wix-text-muted font-bold">
+                  {allOrders.length || recentOrders.length} orders total
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </section>
       </main>
     </div>
   );

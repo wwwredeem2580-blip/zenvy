@@ -1516,7 +1516,7 @@ export default function ManageEvent() {
   ].filter(t => visibleTabs.includes(t.key));
 
   return (
-    <div className="min-h-screen bg-wix-gray-bg text-wix-text-dark font-sans flex flex-col">
+    <div className="min-h-screen mt-20 bg-wix-gray-bg text-wix-text-dark font-sans flex flex-col">
       <MobileTabStrip activeKey={activeKey} onSelect={setActiveKey} />
 
       <div className="flex flex-1">
