@@ -39,7 +39,7 @@ export const LearnLayout: React.FC<LearnLayoutProps> = ({ children }) => {
   const handleGetStarted = () => router.push('/onboarding');
 
   return (
-    <div className="bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
+    <div className="bg-neutral-0 mt-20 font-sans selection:bg-brand-100 selection:text-brand-900">
       
       <div className="w-full px-4 py-4 md:px-6 md:py-6 flex flex-col lg:flex-row gap-2 relative">
         {/* Mobile Sidebar Toggle */}

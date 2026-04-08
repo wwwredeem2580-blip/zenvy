@@ -303,18 +303,18 @@ export function Profile() {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-emerald-50 border border-emerald-100 p-6 rounded-none mb-12 flex items-center justify-between"
+            className="bg-emerald-50 border border-emerald-100 p-6 rounded-none mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-emerald-500 rounded-none flex items-center justify-center text-white">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="w-10 h-10 bg-emerald-500 rounded-none flex items-center justify-center text-white shrink-0">
                 <ShieldCheck size={20} />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-emerald-900">Profile Complete — You're Eligible to Create Events</h4>
+                <h4 className="text-sm font-bold text-emerald-900 leading-tight mb-1">Profile Complete — You're Eligible to Create Events</h4>
                 <p className="text-xs text-emerald-700/70">Phone verified and payout method configured. You can now publish events on Zenvy.</p>
               </div>
             </div>
-            <a href="/host/events/create" className="bg-emerald-600 text-white px-4 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all">
+            <a href="/host/events/create" className="w-full sm:w-auto bg-emerald-600 text-white px-5 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-emerald-700 transition-all text-center">
               Create Event
             </a>
           </motion.div>
@@ -322,14 +322,14 @@ export function Profile() {
           <motion.div 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-indigo-50 border border-indigo-100 p-6 rounded-none mb-12 flex items-center justify-between"
+            className="bg-indigo-50 border border-indigo-100 p-6 rounded-none mb-12 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-indigo-500 rounded-none flex items-center justify-center text-white">
+            <div className="flex items-start sm:items-center gap-4">
+              <div className="w-10 h-10 bg-indigo-500 rounded-none flex items-center justify-center text-white shrink-0">
                 <AlertCircle size={20} />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-indigo-900 uppercase tracking-widest text-[11px]">Note: Complete Your Profile</h4>
+                <h4 className="text-sm font-bold text-indigo-900 uppercase tracking-widest text-[11px] leading-tight mb-1">Note: Complete Your Profile</h4>
                 <p className="text-xs text-indigo-700/70">Verify your phone number and add a payment method to create events.</p>
               </div>
             </div>

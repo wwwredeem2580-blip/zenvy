@@ -284,7 +284,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showGuide, setShowGuide] = useState(false);
-  const [showNote, setShowNote] = useState(true);
+  const [showNote, setShowNote] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAllEvents, setShowAllEvents] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -303,15 +303,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [metricsData, eventsData, ordersData, guideData] = await Promise.all([
+        const [metricsData, eventsData, ordersData, guideData, profileData] = await Promise.all([
           hostAnalyticsService.getDashboardMetrics(),
           hostEventsService.getHostEvents({ limit: 50, page: 1, filters: {} }),
           hostAnalyticsService.getHostOrders(1, 5),
           apiClient.get<any>('/api/host/guide').catch(() => ({ completedItems: [] })),
+          hostEventsService.getProfile().catch(() => null),
         ]);
         setMetrics(metricsData);
         setEvents(eventsData.events || []);
         setRecentOrders(ordersData.orders || []);
+        
+        // Only show the profile completion note if the profile is actually incomplete
+        if (profileData && !profileData.profileComplete) {
+          setShowNote(true);
+        }
+        
         if ((guideData.completedItems?.length || 0) < TOTAL_ITEMS) setShowGuide(true);
       } catch (err: any) {
         setError(err.message || 'Failed to load dashboard');
