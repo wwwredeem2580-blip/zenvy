@@ -457,7 +457,7 @@ export default function EventDetails() {
 
             {/* Cover Image */}
             <div
-              className="w-full md:w-3/4 h-full border border-black relative overflow-hidden group cursor-pointer bg-[#161616] flex items-center justify-center"
+              className="w-full md:w-3/4 h-full border border-ink/10 relative overflow-hidden group cursor-pointer bg-neutral-900 flex items-center justify-center shadow-sm"
               onClick={() => setSelectedImage({ url: coverImageUrl, label: event.title })}
             >
               {coverImageUrl ? (
@@ -479,12 +479,12 @@ export default function EventDetails() {
             </div>
 
             {/* Gallery Stack */}
-            <div className="hidden md:flex w-1/4 h-full border border-black relative flex-col bg-white">
+            <div className="hidden md:flex w-1/4 h-full relative flex-col bg-white overflow-hidden border border-ink/5 group">
               <button
-                className="absolute top-0 left-0 w-full h-9 bg-white border-b border-black flex items-center justify-center z-10 hover:bg-gray-50 transition-colors"
+                className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center z-10 hover:bg-white transition-all opacity-0 group-hover:opacity-100"
                 onClick={() => scrollGallery('up')}
               >
-                <ChevronUp className="w-4 h-4" />
+                <ChevronUp className="w-4 h-4 text-ink" />
               </button>
 
               <div ref={galleryRef} className="flex-1 overflow-y-auto pt-9 pb-9 flex flex-col">
@@ -493,11 +493,11 @@ export default function EventDetails() {
                   ? galleryImages.map((img: any, idx: number) => (
                     <div
                       key={idx}
-                      className="w-full min-h-[110px] border-b border-black relative cursor-pointer group overflow-hidden"
+                      className="w-full min-h-[110px] border-b border-ink/5 relative cursor-pointer group/thumb overflow-hidden"
                       onClick={() => setSelectedImage({ url: img.url, label: img.caption || `Gallery ${idx + 1}` })}
                     >
-                      <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-all" />
+                      <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover group-hover/thumb:scale-110 transition-transform duration-500" />
+                      <div className="absolute inset-0 bg-ink/20 group-hover/thumb:bg-transparent transition-all duration-300" />
                     </div>
                   ))
                   : (
@@ -516,10 +516,10 @@ export default function EventDetails() {
               </div>
 
               <button
-                className="absolute bottom-0 left-0 w-full h-9 bg-white border-t border-black flex items-center justify-center z-10 hover:bg-gray-50 transition-colors"
+                className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center z-10 hover:bg-white transition-all opacity-0 group-hover:opacity-100"
                 onClick={() => scrollGallery('down')}
               >
-                <ChevronDown className="w-4 h-4" />
+                <ChevronDown className="w-4 h-4 text-ink" />
               </button>
             </div>
           </div>
@@ -673,27 +673,33 @@ export default function EventDetails() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[1000] bg-white/95 backdrop-blur-sm flex items-center justify-center p-4 sm:p-10 cursor-pointer"
+            className="fixed inset-0 z-[1000] bg-neutral-950/98 backdrop-blur-md flex items-center justify-center p-4 sm:p-10 cursor-pointer"
             onClick={() => setSelectedImage(null)}
           >
-            <button
-              className="absolute top-5 right-5 bg-white p-2 border-2 border-black hover:scale-110 transition-transform z-10"
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="absolute top-8 right-8 text-white/50 hover:text-white transition-all z-10 p-2"
               onClick={() => setSelectedImage(null)}
             >
-              <X className="w-6 h-6" />
-            </button>
-            <div
-              className={`w-full max-w-5xl h-[55vh] sm:h-[75vh] border border-black flex items-center justify-center overflow-hidden cursor-default ${!selectedImage.url ? selectedImage.pattern || 'cover-pattern' : ''}`}
+              <X className="w-8 h-8" />
+            </motion.button>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className={`w-full max-w-6xl h-[60vh] sm:h-[80vh] flex items-center justify-center overflow-hidden cursor-default ${!selectedImage.url ? selectedImage.pattern || 'cover-pattern' : ''}`}
               onClick={e => e.stopPropagation()}
             >
               {selectedImage.url ? (
                 <img src={selectedImage.url} alt={selectedImage.label} className="w-full h-full object-contain" />
               ) : (
-                <h2 className="text-wix-text-dark font-bold text-5xl sm:text-8xl tracking-widest bg-white/60 px-8 py-5 border border-black">
+                <h2 className="text-white font-light text-5xl sm:text-8xl tracking-widest px-8 py-5">
                   {selectedImage.label}
                 </h2>
               )}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
