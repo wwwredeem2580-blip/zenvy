@@ -10,6 +10,7 @@ import { DateInput } from '@/components/ui/DateInput';
 import { TimeInput } from '@/components/ui/TimeInput';
 import { useNotification } from '@/lib/context/notification';
 import { eventsService } from '@/lib/api/events';
+import { cleanText } from '@/lib/utils';
 
 interface EventDetailsTabProps {
   data: HostEventDetailsResponse | null;
@@ -456,8 +457,8 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                       />
                     </div>
                   ) : (
-                    <p className="text-sm text-neutral-500 font-[300] line-clamp-2">
-                      {data?.event?.tagline || 'Lorem ipsum dolor sit amet consectetur adipisicing elit.'}
+                    <p className="text-sm text-neutral-500 font-[300] line-clamp-2 whitespace-pre-wrap">
+                      {cleanText(data?.event?.tagline || 'Lorem ipsum dolor sit amet consectetur adipisicing elit.')}
                     </p>
                   )}
                   
@@ -588,9 +589,9 @@ export const EventDetailsTab = ({ data, onUpdate }: EventDetailsTabProps) => {
                             placeholder="Describe your event experience..."
                         />
                     ) : (
-                        <p className="text-sm font-[300] text-neutral-500 leading-relaxed">
-                        {description || 'No description provided.'}
-                        </p>
+                        <div className="text-sm font-[300] text-neutral-500 leading-relaxed whitespace-pre-wrap break-words">
+                          {cleanText(description) || 'No description provided.'}
+                        </div>
                     )}
                   </div>
 

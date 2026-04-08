@@ -15,7 +15,7 @@ export const basicInfoSchema = z.object({
 export const eventDetailsSchema = z.object({
   description: z.string()
     .min(50, 'Description must be at least 50 characters')
-    .max(2000, 'Description must not exceed 2000 characters'),
+    .max(5000, 'Description must not exceed 5000 characters'),
   coverImage: z.string()
     .url('Please upload a valid cover image')
     .min(1, 'Cover image is required'),

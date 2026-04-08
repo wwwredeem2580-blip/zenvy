@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/context/auth';
 import { useNotification } from '@/lib/context/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckoutBKash } from './CheckoutBKash';
+import { cleanText } from '@/lib/utils';
 import {
   ArrowLeft,
   MapPin,
@@ -114,6 +115,11 @@ export default function EventDetails() {
   const scrollGallery = (dir: 'up' | 'down') => {
     galleryRef.current?.scrollBy({ top: dir === 'up' ? -140 : 140, behavior: 'smooth' });
   };
+
+  // Description expand/collapse
+  const [descExpanded, setDescExpanded] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
+  const [descOverflows, setDescOverflows] = useState(false);
 
   // Fetch event
   useEffect(() => {
@@ -314,8 +320,8 @@ export default function EventDetails() {
             <h1 className="text-[32px] sm:text-[42px] font-medium tracking-tight text-wix-text-dark leading-none mb-3">
               {event.title}
             </h1>
-            <p className="text-[15px] text-wix-text-muted leading-relaxed">
-              {event.tagline || event.description}
+            <p className="text-[15px] text-wix-text-muted leading-relaxed whitespace-pre-wrap">
+              {cleanText(event.tagline || event.description)}
             </p>
           </div>
 
@@ -444,9 +450,25 @@ export default function EventDetails() {
               <div className="flex flex-col gap-5">
                 <h3 className="text-[22px] font-semibold tracking-tight">About This Event</h3>
                 {(event.description || event.tagline) && (
-                  <p className="text-[15px] text-wix-text-dark leading-relaxed">
-                    {event.description}
-                  </p>
+                  <div className="flex flex-col gap-3">
+                    <div
+                      ref={(el) => {
+                        (descRef as any).current = el;
+                        if (el) setDescOverflows(el.scrollHeight > 200);
+                      }}
+                      className={`text-[15px] text-wix-text-dark leading-relaxed whitespace-pre-wrap break-words overflow-hidden transition-all duration-500 ${descExpanded ? '' : 'max-h-[200px]'}`}
+                    >
+                      {cleanText(event.description)}
+                    </div>
+                    {descOverflows && (
+                      <button
+                        onClick={() => setDescExpanded(v => !v)}
+                        className="self-start text-[13px] font-bold uppercase tracking-widest border-b border-wix-text-dark pb-0.5 hover:opacity-60 transition-opacity"
+                      >
+                        {descExpanded ? 'See Less ↑' : 'See More ↓'}
+                      </button>
+                    )}
+                  </div>
                 )}
                 {event.highlights?.length > 0 && (
                   <ul className="flex flex-col gap-2 mt-2">

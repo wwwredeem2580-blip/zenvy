@@ -749,9 +749,24 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
                   value={formData.description || ''}
                   onChange={(e) => updateField('description', e.target.value)}
                   placeholder="Event description"
+                  maxLength={5000}
                   className="w-full min-h-[150px] px-4 py-3 bg-gray-50 border-2 border-gray-50 rounded-xl focus:border-purple-600 focus:bg-white outline-none transition-all"
                 />
-                {errors.description && <p className="text-xs text-red-500">{errors.description}</p>}
+                <div className="flex justify-between items-center mt-1">
+                  {errors.description
+                    ? <p className="text-xs text-red-500">{errors.description}</p>
+                    : <span />
+                  }
+                  <span className={`text-xs font-mono tabular-nums ml-auto ${
+                    (formData.description?.length || 0) > 5000
+                      ? 'text-red-500'
+                      : (formData.description?.length || 0) > 4000
+                      ? 'text-amber-500'
+                      : 'text-neutral-400'
+                  }`}>
+                    {formData.description?.length || 0} / 5000
+                  </span>
+                </div>
               </div>
 
               <div className="flex gap-3">
