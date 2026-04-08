@@ -22,15 +22,26 @@ import {
 import { QRModal } from './QRModal';
 import { BDTIcon } from '../ui/Icons';
 
-/* ─── Chip SVG ─── */
-const ChipIcon = () => (
-  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="1" y="1" width="38" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M1 10H10V20H1" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M39 10H30V20H39" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M15 1V30" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M25 1V30" stroke="currentColor" strokeWidth="1.5"/>
-    <path d="M15 15H25" stroke="currentColor" strokeWidth="1.5"/>
+/* ─── Premium QR Icon SVG ─── */
+const PremiumQRIcon = ({ className }: { className?: string }) => (
+  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="0" y="0" width="12" height="12" fill="currentColor" />
+    <rect x="28" y="0" width="12" height="12" fill="currentColor" />
+    <rect x="0" y="28" width="12" height="12" fill="currentColor" />
+    <rect x="16" y="0" width="8" height="4" fill="currentColor" />
+    <rect x="28" y="16" width="4" height="8" fill="currentColor" />
+    <rect x="16" y="28" width="8" height="4" fill="currentColor" />
+    <rect x="0" y="16" width="4" height="8" fill="currentColor" />
+    <rect x="16" y="16" width="8" height="8" fill="currentColor" />
+    <rect x="28" y="28" width="4" height="4" fill="currentColor" />
+    <rect x="36" y="36" width="4" height="4" fill="currentColor" />
+  </svg>
+);
+
+/* ─── Aesthetic Barcode SVG ─── */
+const BarcodeIcon = ({ className }: { className?: string }) => (
+  <svg width="40" height="150" viewBox="0 0 40 150" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M5 0V150M12 0V150M18 0V150M22 0V150M30 0V150M35 0V150M10 0V150M25 0V150M38 0V150" stroke="currentColor" strokeWidth="1.5"/>
   </svg>
 );
 
@@ -57,10 +68,22 @@ function FlippableTicket({
     tierName.toLowerCase().includes('premium') || tierName.toLowerCase().includes('early');
 
   const bgGradient = isVIP
-    ? 'bg-[#1a1a1a] text-white border-2 border-black'
+    ? 'bg-neutral-900 border-2 border-[#D4AF37] text-white'
     : isPremium
-    ? 'bg-wix-purple text-white border-2 border-black'
-    : 'bg-white text-wix-text-dark border-2 border-black';
+    ? 'bg-neutral-900 border-2 border-slate-300 text-white'
+    : 'bg-white text-wix-text-dark border border-neutral-200';
+
+  const metallicAccent = isVIP
+    ? 'bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-transparent bg-clip-text'
+    : isPremium
+    ? 'bg-gradient-to-r from-slate-300 via-slate-100 to-slate-400 text-transparent bg-clip-text'
+    : '';
+
+  const stubBg = isVIP
+    ? 'bg-gradient-to-b from-neutral-800 to-neutral-900'
+    : isPremium
+    ? 'bg-gradient-to-b from-neutral-800 to-neutral-900'
+    : 'bg-neutral-50';
 
   const accentText = isVIP || isPremium ? 'text-gray-300' : 'text-wix-text-muted';
 
@@ -90,64 +113,114 @@ function FlippableTicket({
     >
       {/* ─ FRONT ─ */}
       <div
-        className={`absolute inset-0 w-full h-full backface-hidden flex flex-col justify-between p-5 sm:p-7 overflow-hidden ${bgGradient}`}
+        className={`absolute inset-0 w-full h-full backface-hidden flex flex-row overflow-hidden ${bgGradient} rounded-[2px] shadow-[0_20px_50px_rgba(0,0,0,0.15)]`}
       >
-        <div className="flex justify-between items-start">
-          <ChipIcon />
-          <div className="text-right">
-            <div className={`text-[11px] font-black uppercase tracking-widest mb-0.5 ${accentText}`}>Event Ticket</div>
-            <div className="text-[14px] font-black uppercase tracking-widest">{tierName}</div>
+        {/* Main Body (Left) */}
+        <div className="flex-[2.5] flex flex-col justify-between p-4 sm:p-8 relative">
+          {/* Authentic Die-cut Perforation Divider */}
+          <div className="absolute top-0 right-0 h-full w-[2px] flex flex-col items-center justify-between py-1">
+             <div className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-wix-gray-bg border border-black/5 absolute -top-2 sm:-top-3 -right-2 sm:-right-3 z-10" />
+             <div className="h-full border-r-[1.5px] border-dotted border-current opacity-20" />
+             <div className="w-4 h-4 sm:w-6 sm:h-6 rounded-full bg-wix-gray-bg border border-black/5 absolute -bottom-2 sm:-bottom-3 -right-2 sm:-right-3 z-10" />
+          </div>
+
+          <div className="flex justify-between items-start">
+            <div className="flex flex-col gap-1">
+              <span className={`text-[8px] sm:text-[10px] font-bold uppercase tracking-[0.4em] mb-1 ${(isVIP || isPremium) ? metallicAccent : 'text-wix-purple'}`}>
+                {isVIP ? 'Exclusive Access' : isPremium ? 'Premium Entry' : 'General Access'}
+              </span>
+              <h3 className={`text-[16px] sm:text-[24px] font-bold leading-tight line-clamp-1 tracking-tight ${(isVIP || isPremium) ? 'text-white' : 'text-wix-text-dark'}`}>
+                {eventTitle}
+              </h3>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 items-end">
+            <div className="flex flex-col gap-0.5 sm:gap-1">
+              <span className={`text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.2em] ${accentText}`}>Date</span>
+              <span className="text-[10px] sm:text-[12px] font-mono font-bold">{eventDate}</span>
+            </div>
+            <div className="flex flex-col gap-0.5 sm:gap-1">
+              <span className={`text-[6px] sm:text-[8px] font-bold uppercase tracking-[0.2em] ${accentText}`}>Time</span>
+              <span className="text-[10px] sm:text-[12px] font-mono font-bold">{eventTime}</span>
+            </div>
+          </div>
+
+          <div className={`text-[8px] sm:text-[10px] font-mono tracking-[0.2em] sm:tracking-[0.3em] opacity-80 ${accentText}`}>
+             {displayCode}
           </div>
         </div>
 
-        <div className={`font-mono text-[15px] sm:text-[18px] tracking-[0.18em] my-3 ${accentText}`}>
-          {displayCode}
+        {/* Stub (Right) */}
+        <div className={`w-[30%] sm:w-[28%] flex flex-col justify-between items-center p-3 sm:p-6 ${stubBg} relative shrink-0`}>
+          {/* Grain texture overlay */}
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]" />
+
+          <div className="text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] transform rotate-90 origin-center translate-y-2 opacity-30 whitespace-nowrap">
+             Ticket Stub
+          </div>
+
+          <div className="flex flex-col items-center gap-1 sm:gap-1.5 z-10">
+             {/* Premium QR Icon instead of real image for speed & aesthetics */}
+             <div className="p-1 sm:p-1.5 bg-white shadow-inner mb-1 sm:mb-2 rounded-[2px] overflow-hidden">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white flex items-center justify-center">
+                   <PremiumQRIcon className={`w-full h-full ${(isVIP || isPremium) ? 'text-neutral-900' : 'text-neutral-900'}`} />
+                </div>
+             </div>
+             <div className={`text-[10px] sm:text-[13px] font-black uppercase tracking-wider ${(isVIP || isPremium) ? metallicAccent : 'text-wix-text-dark'}`}>{tierName}</div>
+          </div>
         </div>
 
-        <div className="flex justify-between items-end">
-          <div>
-            <div className={`text-[9px] uppercase tracking-widest mb-0.5 ${accentText}`}>Event</div>
-            <div className="text-[12px] font-bold line-clamp-1 max-w-[180px]">{eventTitle}</div>
-          </div>
-          <div className="text-right">
-            <div className={`text-[9px] uppercase tracking-widest mb-0.5 ${accentText}`}>Valid</div>
-            <div className="text-[12px] font-mono font-bold">{eventDate}</div>
-          </div>
-        </div>
-
-        <div className={`absolute bottom-4 right-5 text-[9px] uppercase tracking-widest ${accentText} opacity-50`}>
-          Tap to flip
+        <div className={`absolute bottom-1.5 sm:bottom-2 left-4 sm:left-6 text-[6px] sm:text-[7px] font-bold uppercase tracking-[0.2em] ${accentText} opacity-60`}>
+          Zenvy Digital Pass
         </div>
       </div>
 
       {/* ─ BACK ─ */}
       <div
-        className={`absolute inset-0 w-full h-full backface-hidden flex flex-col rotate-y-180 overflow-hidden ${bgGradient}`}
+        className={`absolute inset-0 w-full h-full backface-hidden flex flex-row rotate-y-180 overflow-hidden ${bgGradient} rounded-[2px] shadow-[0_20px_50px_rgba(0,0,0,0.15)]`}
       >
-        <div className={`w-full h-10 mt-6 ${isVIP || isPremium ? 'bg-white/10' : 'bg-gray-100'}`} />
-        <div className="px-6 flex flex-col gap-3 mt-4 flex-1">
-          <div className={`w-full h-9 flex items-center justify-end px-4 ${isVIP || isPremium ? 'bg-black/30' : 'bg-gray-100'}`}>
-            <span className="font-mono font-black tracking-widest text-[12px]">
-              #{ticket.ticketNumber || '—'}
-            </span>
+        <div className="flex-[2.5] p-5 sm:p-8 flex flex-col justify-between relative">
+          <div className="absolute top-0 right-0 h-full w-[2px] flex flex-col items-center justify-between py-1">
+             <div className="w-6 h-6 rounded-full bg-wix-gray-bg border border-black/5 absolute -top-3 -right-3 z-10" />
+             <div className="h-full border-r-[1.5px] border-dotted border-current opacity-20" />
+             <div className="w-6 h-6 rounded-full bg-wix-gray-bg border border-black/5 absolute -bottom-3 -right-3 z-10" />
           </div>
-          <div className="flex flex-col gap-1.5 mt-1">
-            <div className={`flex items-center gap-2 text-[11px] ${accentText}`}>
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
-              {eventDate} · {eventTime}
-            </div>
-            <div className={`flex items-center gap-2 text-[11px] ${accentText}`}>
-              <MapPin className="w-3.5 h-3.5 shrink-0" />
-              {ticket.eventVenue || 'Venue TBA'}
-            </div>
+
+          <div>
+             <div className={`text-[8px] sm:text-[9px] font-black uppercase tracking-[0.4em] mb-4 sm:mb-6 border-b border-current/10 pb-2 sm:pb-3 ${accentText}`}>Exclusive Benefits</div>
+             {ticket.ticketTheme?.benefits && ticket.ticketTheme.benefits.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2 sm:gap-y-3">
+                  {ticket.ticketTheme.benefits.slice(0, 6).map((b: string, i: number) => (
+                    <li key={i} className={`text-[9px] sm:text-[11px] ${accentText} flex items-center gap-2 sm:gap-2.5 font-medium`}>
+                      <span className="w-1 sm:w-1.5 h-[1px] sm:h-[1.5px] bg-current opacity-40 shrink-0" /> {b}
+                    </li>
+                  ))}
+                </ul>
+             ) : (
+                <p className={`text-[10px] sm:text-[11px] ${accentText} font-medium tracking-wide`}>This pass grants full entry access and all standard event amenities.</p>
+             )}
           </div>
-          {ticket.ticketTheme?.benefits && ticket.ticketTheme.benefits.length > 0 && (
-            <ul className="mt-1 flex flex-col gap-1">
-              {ticket.ticketTheme.benefits.slice(0, 4).map((b: string, i: number) => (
-                <li key={i} className={`text-[11px] ${accentText}`}>• {b}</li>
-              ))}
-            </ul>
-          )}
+
+          <div className="mt-auto flex gap-4 sm:gap-8 items-center pt-4 sm:pt-6 border-t border-current/10">
+             <div className={`flex items-center gap-2 text-[9px] sm:text-[10px] font-bold ${accentText}`}>
+                <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-50" /> {eventDate}
+             </div>
+             <div className={`flex items-center gap-2 text-[9px] sm:text-[10px] font-bold ${accentText}`}>
+                <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-50" /> {ticket.eventVenue?.split(',')[0] || 'Venue'}
+             </div>
+          </div>
+        </div>
+
+        <div className={`w-[30%] sm:w-[28%] flex flex-col justify-center items-center p-3 sm:p-6 ${stubBg} relative shrink-0`}>
+           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')]" />
+           <div className={`text-[8px] sm:text-[9px] font-black tracking-[0.4em] transform -rotate-90 origin-center whitespace-nowrap mb-8 sm:mb-12 opacity-30 ${accentText}`}>SECURE ACCESS</div>
+           <div className="p-2 bg-white shadow-2xl rounded-sm z-10">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-neutral-900 flex items-center justify-center overflow-hidden">
+                 <div className="w-8 h-8 sm:w-10 sm:h-10 border-[1.5px] border-white/20 border-dashed animate-spin-slow rotate-45" />
+              </div>
+           </div>
+           <p className={`text-[6px] sm:text-[7px] font-bold text-center mt-3 sm:mt-4 leading-tight opacity-40 uppercase tracking-[0.2em] ${accentText}`}>Verified</p>
         </div>
       </div>
     </div>
@@ -178,23 +251,23 @@ function TicketStack({
   const activeTicket = tickets[currentIndex];
 
   return (
-    <div className="flex flex-col items-center w-full bg-wix-gray-bg border-t border-wix-border-light p-5 sm:p-10 relative">
+    <div className="flex flex-col items-center w-full bg-wix-gray-bg border-t border-wix-border-light p-3 sm:p-10 relative">
       <div className="absolute top-4 left-4 text-[10px] font-black tracking-widest text-gray-400 uppercase">
         Ticket {currentIndex + 1} of {tickets.length}
       </div>
 
-      {/* Stack + Arrows */}
-      <div className="flex items-center justify-center w-full gap-3 sm:gap-8 my-8">
+      {/* Stack + Arrows (Desktop) */}
+      <div className="flex items-center justify-center w-full gap-8 my-8">
         <button
           onClick={handlePrev}
           disabled={currentIndex === 0}
-          className={`p-2 sm:p-3 border border-black rounded-full transition-colors shrink-0 ${currentIndex === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-black hover:text-white bg-white text-black'}`}
+          className={`hidden sm:flex p-3 border border-black rounded-full transition-colors shrink-0 ${currentIndex === 0 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-black hover:text-white bg-white text-black'}`}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
 
         {/* Stack wrapper */}
-        <div className="w-full max-w-[300px] sm:max-w-[380px] aspect-[1.586/1] perspective-1000 relative">
+        <div className="w-full max-w-[580px] aspect-[1.8/1] sm:aspect-[2.3/1] perspective-1000 relative self-center">
           {tickets.map((ticket, index) => {
             const offset = index - currentIndex;
             if (offset < 0 || offset > 2) return null;
@@ -224,7 +297,25 @@ function TicketStack({
         <button
           onClick={handleNext}
           disabled={currentIndex === tickets.length - 1}
-          className={`p-2 sm:p-3 border border-black rounded-full transition-colors shrink-0 ${currentIndex === tickets.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-black hover:text-white bg-white text-black'}`}
+          className={`hidden sm:flex p-3 border border-black rounded-full transition-colors shrink-0 ${currentIndex === tickets.length - 1 ? 'opacity-20 cursor-not-allowed' : 'hover:bg-black hover:text-white bg-white text-black'}`}
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Navigation Row (Mobile only) */}
+      <div className="flex sm:hidden items-center justify-center gap-6 mb-8 mt-2">
+        <button
+          onClick={handlePrev}
+          disabled={currentIndex === 0}
+          className={`p-3 border border-black rounded-full transition-colors ${currentIndex === 0 ? 'opacity-20 cursor-not-allowed' : 'bg-white text-black'}`}
+        >
+          <ChevronLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleNext}
+          disabled={currentIndex === tickets.length - 1}
+          className={`p-3 border border-black rounded-full transition-colors ${currentIndex === tickets.length - 1 ? 'opacity-20 cursor-not-allowed' : 'bg-white text-black'}`}
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -294,7 +385,7 @@ function EventAccordion({
     <div className="border border-wix-border-light bg-white mb-3 transition-all">
       {/* Header */}
       <div
-        className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-5 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors gap-4 sm:gap-6"
+        className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-3 sm:p-6 cursor-pointer hover:bg-gray-50 transition-colors gap-4 sm:gap-6"
         onClick={onToggle}
       >
         <div className="flex items-start gap-4 flex-1 min-w-0">
@@ -476,7 +567,7 @@ export default function WalletPage() {
 
   return (
     <div className="min-h-screen bg-wix-gray-bg text-wix-text-dark font-sans">
-      <main className="max-w-[920px] mx-auto w-full px-4 sm:px-6 py-8 sm:py-12 flex flex-col">
+      <main className="max-w-[920px] mx-auto w-full px-2 sm:px-6 py-8 sm:py-12 flex flex-col">
 
         {/* Back nav */}
         <button
