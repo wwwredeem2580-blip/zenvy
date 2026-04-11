@@ -169,7 +169,7 @@ export const SignupHost: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) => 
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden">
+    <div className="min-h-screen mt-24 lg:mt-8 bg-white flex flex-col items-center justify-center p-0 sm:p-6 relative overflow-hidden">
       {/* Sharp grid background pattern */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,_#9333ea_1px,_transparent_1px)] bg-[length:24px_24px]" />

@@ -81,7 +81,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onGoBack }) => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white">
+    <div className="flex flex-col mt-16 lg:flex-row min-h-screen bg-white">
       {/* Left: Login Form */}
       <motion.div
         initial={{ opacity: 0, x: -20 }}

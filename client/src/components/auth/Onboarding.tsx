@@ -32,7 +32,7 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onContinue, onLogin }) =
   };
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-white overflow-hidden">
+    <div className="flex flex-col mt-9 lg:mt-0 lg:flex-row min-h-screen bg-white overflow-hidden">
       <motion.div
         variants={containerVariants}
         initial="hidden"
