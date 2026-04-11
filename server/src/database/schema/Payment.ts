@@ -16,7 +16,7 @@ const paymentSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['pending', 'succeeded', 'failed', 'refunded'],
+    enum: ['pending', 'succeeded', 'failed', 'refunded', 'suspicious'],
     default: 'pending'
   },
 
@@ -33,6 +33,17 @@ const paymentSchema = new mongoose.Schema({
   refundId: String, // Stripe refund ID
   refundAmount: Number,
   refundedAt: Date,
+
+  // GATEWAY TRANSACTION DETAILS
+  transactionId: String,        // PayStation trx_id
+  webhookReceived: { type: Boolean, default: false },
+  webhookReceivedAt: Date,
+
+  // SUSPICIOUS PAYMENT FLAGS
+  suspiciousAt: Date,
+  suspiciousReason: String,
+  receivedAmount: Number,
+  expectedAmount: Number,
 
   // TIMESTAMPS
   createdAt: { type: Date, default: Date.now },

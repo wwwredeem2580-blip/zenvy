@@ -4,7 +4,7 @@ import { User } from '../../database/auth/auth';
 import { Event } from '../../database/event/event';
 import { Payment } from '../../database/payment/payment';
 import CustomError from '../../utils/CustomError';
-import { dummyCreatePayment, dummyExecutePayment } from '../../utils/order/bkash';
+import { initiatePaystationPayment, verifyPaystationTransaction } from '../../utils/order/paystation';
 import { completeOrder } from '../../utils/order/completeOrder';
 import { generateOrderNumber } from '../../utils/order/generateOrderNumber';
 import { calculatePricing } from '../../utils/order/calculatePricing';
@@ -246,32 +246,61 @@ export const createOrderService = async (data: any) => {
     }
   }
 
-  const payment: any = await dummyCreatePayment({
-    amount: pricing.subtotal,
-    callbackURL: `${process.env.SERVER_URL!}/order/bkash/callback?orderId=${order._id.toString()}`,
-    orderID: order._id.toString(),
-    reference: order.orderNumber,
-    eventId: data.eventId // Include eventId for redirect
-  });
+  // Fetch buyer's profile details (required by PayStation)
+  const buyerProfile = await User.findById(data.userId)
+    .select('firstName lastName email phoneNumber')
+    .lean() as any;
 
-  if(payment?.statusCode !== "0000" || !payment?.bkashUrl || !payment?.paymentId) {
-    order.paymentStatus = 'failed';
-    await order.save();
-    throw new CustomError("Payment failed", 400);
+  if (!buyerProfile) {
+    throw new CustomError('User not found', 404);
   }
 
-   await Payment.create({
+  const custName = [buyerProfile.firstName, buyerProfile.lastName].filter(Boolean).join(' ') || 'Customer';
+  const custPhone = buyerProfile.phoneNumber || '01700000000';
+  const custEmail = buyerProfile.email || data.buyerEmail;
+
+  const callbackUrl = `${process.env.SERVER_URL!}/order/callback`;
+
+  const payment: any = await initiatePaystationPayment({
+    invoice_number: order.orderNumber,       // Unique per-order, used to look up on callback
+    payment_amount: pricing.subtotal,
+    cust_name: custName,
+    cust_phone: custPhone,
+    cust_email: custEmail,
+    cust_address: 'Not Provided',
+    callback_url: callbackUrl,
+    reference: order.orderNumber,
+    checkout_items: data.eventId,
+  });
+
+  if (payment?.status_code !== '200' || !payment?.payment_url) {
+    order.paymentStatus = 'failed';
+    await order.save();
+
+    // Release reserved inventory on initiation failure
+    for (const item of ticketsWithSubtotal) {
+      await Event.updateOne(
+        { _id: data.eventId, 'tickets._id': item.ticketVariantId },
+        { $inc: { 'tickets.$.reserved': -item.quantity } }
+      );
+    }
+
+    throw new CustomError(payment?.message || 'Payment initiation failed', 400);
+  }
+
+  // Use orderNumber as the canonical payment identifier (= invoice_number sent to PayStation)
+  await Payment.create({
     orderId: order._id,
     userId: data.userId,
-    paymentId: payment.paymentId,
+    paymentId: order.orderNumber,
     amount: pricing.subtotal,
-    currency: "BDT",
-    paymentMethod: data.paymentMethod,
-    status: "pending",
+    currency: 'BDT',
+    paymentMethod: 'bkash',  // PayStation processes via bKash/MFS
+    status: 'pending',
     createdAt: new Date()
   });
 
-  order.paymentId = payment.paymentId;
+  order.paymentId = order.orderNumber;
   await order.save();
 
   return {
@@ -279,39 +308,43 @@ export const createOrderService = async (data: any) => {
     orderNumber: order.orderNumber,
     subtotal: pricing.subtotal,
     expiresAt: order.expiresAt,
-    paymentId: order.paymentId,
-    paymentUrl: payment?.bkashUrl
+    paymentId: order.orderNumber,
+    paymentUrl: payment.payment_url   // Official PayStation hosted checkout URL
   };
 };
 
 
-// Handle Bkash callback
-export const handleBkashCallbackService = async (
-  orderId: string, 
-  paymentId: string,
-  userId?: string  // Optional: for security check
-) => {
-  // 1. VALIDATE ORDER EXISTS
-  const order = await Order.findOne({ _id: orderId });
+// Handle PayStation callback (called when PayStation redirects buyer back)
+export const handlePaystationCallbackService = async (
+  invoice_number: string,   // = orderNumber we sent as invoice_number
+  gateway_status: string,   // 'Successful' | 'Failed' | 'Canceled'
+): Promise<{ success: boolean; message: string; orderId: any; eventId?: string }> => {
+  // 1. FIND ORDER BY INVOICE NUMBER (orderNumber was used as invoice_number)
+  const order = await Order.findOne({ orderNumber: invoice_number });
   if (!order) {
     throw new CustomError('Order not found', 404);
   }
 
-  // SECURITY: Verify ownership (if userId provided)
-  if (userId && order.userId.toString() !== userId) {
-    throw new CustomError('Unauthorized', 403);
+  // 2. IDEMPOTENCY CHECK
+  if (order.status === 'confirmed') {
+    return {
+      success: true,
+      message: 'Payment already processed',
+      orderId: order._id,
+      eventId: order.eventId?.toString()
+    };
   }
 
-  // 2. CHECK PAYMENT TIMEOUT
+  // 3. CHECK ORDER EXPIRY
   if (order.expiresAt < new Date()) {
     throw new CustomError('Order has expired', 400);
   }
 
-  // 3. ENSURE PAYMENT RECORD EXISTS
-  let payment = await Payment.findOne({ paymentId });
+  // 4. FIND OR RECREATE PAYMENT RECORD
+  let payment = await Payment.findOne({ paymentId: invoice_number });
   if (!payment) {
     payment = await Payment.create({
-      paymentId,
+      paymentId: invoice_number,
       orderId: order._id,
       userId: order.userId,
       amount: order.pricing?.subtotal,
@@ -322,65 +355,66 @@ export const handleBkashCallbackService = async (
     });
   }
 
-  // 4. IDEMPOTENCY CHECK
-  if (payment.status === 'succeeded') {
-    return { 
-      success: true, 
-      message: 'Payment already processed', 
-      orderId: order._id 
+  // 5. SHORT-CIRCUIT ON FAILED/CANCELLED (before wasting a verification call)
+  if (gateway_status !== 'Successful') {
+    await handlePaymentFailure(order, payment, {
+      statusCode: gateway_status,
+      statusMessage: `Payment ${gateway_status} by gateway`
+    });
+    return {
+      success: false,
+      message: `Payment ${gateway_status}`,
+      orderId: order._id,
+      eventId: order.eventId?.toString()
     };
   }
 
-  // 5. VALIDATE PAYMENT WITH BKASH
-  const result: any = await dummyExecutePayment(paymentId);
+  // 6. VERIFY WITH PAYSTATION API (critical — prevents callback status spoofing)
+  const verification = await verifyPaystationTransaction(invoice_number);
 
-  if (result?.statusCode !== '0000') {
-    // PAYMENT FAILED - Cleanup
-    await handlePaymentFailure(order, payment, result);
-    return { 
-      success: false, 
-      message: 'Payment failed', 
-      orderId: order._id 
+  const trxStatus = verification.data?.trx_status?.toLowerCase();
+  // PayStation may return 'success' or 'successful' — accept both
+  const isVerified = trxStatus === 'success' || trxStatus === 'successful';
+  if (verification.status_code !== '200' || !isVerified) {
+    console.warn(`[PAYSTATION] Verification failed for invoice ${invoice_number}: ${verification.message}`);
+    await handlePaymentFailure(order, payment, {
+      statusCode: verification.status_code,
+      statusMessage: verification.message || 'Payment verification failed'
+    });
+    return {
+      success: false,
+      message: 'Payment verification failed',
+      orderId: order._id,
+      eventId: order.eventId?.toString()
     };
   }
 
-  // 6. VALIDATE PAYMENT RESPONSE
-  if (!result?.amount || !result?.currency) {
-    throw new CustomError('Invalid payment response from gateway', 400);
-  }
-
-  // 7. AMOUNT VALIDATION - Critical security check
-  if (result.amount !== order.pricing?.subtotal) {
-    console.error(`[SECURITY] PAYMENT AMOUNT MISMATCH: Order ${orderId}, Expected: ${order.pricing?.subtotal}, Received: ${result.amount}`);
-    
+  // 7. AMOUNT VALIDATION — security check
+  const verifiedAmount = parseFloat(verification.data?.payment_amount || '0');
+  if (verifiedAmount !== order.pricing?.subtotal) {
+    console.error(
+      `[SECURITY] AMOUNT MISMATCH: Order ${order._id}, Expected: ${order.pricing?.subtotal}, Received: ${verifiedAmount}`
+    );
     await Payment.updateOne(
-      { paymentId },
+      { paymentId: invoice_number },
       {
-        status: "suspicious",
+        status: 'suspicious',
         suspiciousAt: new Date(),
-        suspiciousReason: "amount_mismatch",
-        receivedAmount: result.amount,
+        suspiciousReason: 'amount_mismatch',
+        receivedAmount: verifiedAmount,
         expectedAmount: order.pricing?.subtotal
       }
     );
-    
     throw new CustomError('Payment amount validation failed', 400);
   }
 
-  // 8. CURRENCY VALIDATION
-  if (result.currency !== 'BDT') {
-    throw new CustomError('Invalid payment currency', 400);
-  }
-
-  // 9. ATOMIC PAYMENT UPDATE
+  // 8. ATOMIC PAYMENT UPDATE (idempotent)
   const paymentUpdate = await Payment.findOneAndUpdate(
-    { paymentId, status: { $ne: 'succeeded' } },
+    { paymentId: invoice_number, status: { $ne: 'succeeded' } },
     {
-      status: "succeeded",
+      status: 'succeeded',
       succeededAt: new Date(),
-      transactionId: result.transactionId,
-      amount: result.amount,
-      currency: result.currency,
+      transactionId: verification.data?.trx_id,
       webhookReceived: true,
       webhookReceivedAt: new Date()
     },
@@ -388,54 +422,55 @@ export const handleBkashCallbackService = async (
   );
 
   if (!paymentUpdate) {
-    return { 
-      success: true, 
-      message: 'Payment already processed', 
-      orderId: order._id 
+    return {
+      success: true,
+      message: 'Payment already processed',
+      orderId: order._id,
+      eventId: order.eventId?.toString()
     };
   }
 
-  console.log(`[PAYMENT_SUCCESS] Order: ${orderId}, Amount: ${result.amount} ${result.currency}`);
+  console.log(
+    `[PAYMENT_SUCCESS] Order: ${order._id}, TrxId: ${verification.data?.trx_id}, Amount: ${verifiedAmount} BDT`
+  );
 
-  // 10. UPDATE ORDER STATUS
-  if (order.status !== "confirmed") {
-    order.status = "confirmed";
-    order.paymentStatus = "succeeded";
+  // 9. UPDATE ORDER STATUS
+  if (order.status !== 'confirmed') {
+    order.status = 'confirmed';
+    order.paymentStatus = 'succeeded';
     order.confirmedAt = new Date();
     order.paidAt = new Date();
     await order.save();
   }
 
-  // 11. UPDATE INVENTORY (RESERVED → SOLD)
+  // 10. MOVE INVENTORY: RESERVED → SOLD
   for (const item of order.tickets) {
-    const event = await Event.findOne(
-      { _id: order.eventId, "tickets._id": item.ticketVariantId },
-      { "tickets.$": 1 }
+    const eventDoc = await Event.findOne(
+      { _id: order.eventId, 'tickets._id': item.ticketVariantId },
+      { 'tickets.$': 1 }
     );
 
-    const currentReserved = event?.tickets[0]?.reserved || 0;
+    const currentReserved = eventDoc?.tickets[0]?.reserved || 0;
     const newReserved = Math.max(0, currentReserved - item.quantity);
 
     await Event.updateOne(
-      { _id: order.eventId, "tickets._id": item.ticketVariantId },
+      { _id: order.eventId, 'tickets._id': item.ticketVariantId },
       {
-        $set: { "tickets.$.reserved": newReserved },
-        $inc: { "tickets.$.sold": item.quantity }
+        $set: { 'tickets.$.reserved': newReserved },
+        $inc: { 'tickets.$.sold': item.quantity }
       }
     );
   }
 
-  // 12. QUEUE TICKET GENERATION (NON-BLOCKING)
+  // 11. QUEUE TICKET GENERATION (non-blocking)
   try {
     const { addTicketGenerationJob } = await import('../../workers/ticketGeneration.queue');
-    
     await addTicketGenerationJob({
       orderId: order._id.toString(),
       orderNumber: order.orderNumber,
       tickets: order.tickets,
     });
-    
-    console.log(`[TICKET_QUEUE] Queued ticket generation for order: ${orderId}`);
+    console.log(`[TICKET_QUEUE] Queued ticket generation for order: ${order._id}`);
   } catch (err) {
     console.error('[CRITICAL] Failed to queue ticket generation:', err);
     order.requiresManualReview = true;
@@ -443,10 +478,11 @@ export const handleBkashCallbackService = async (
     await order.save();
   }
 
-  return { 
-    success: true, 
-    message: 'Payment succeeded. Tickets are being generated.', 
+  return {
+    success: true,
+    message: 'Payment succeeded. Tickets are being generated.',
     orderId: order._id,
+    eventId: order.eventId?.toString()
   };
 };
 

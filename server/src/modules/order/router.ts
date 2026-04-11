@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { 
   createOrderService,
-  handleBkashCallbackService,
+  handlePaystationCallbackService,
   getOrderService
 } from './service';
 import { handleError } from '../../utils/handleError';
@@ -12,6 +12,7 @@ import { requireAuth } from '../../middlewares/auth';
 
 const router = Router();
 
+// Create a new order and get a PayStation payment URL
 router.post('/', requireAuth, async (req: Request, res: Response) => {
   try {
     if (!req.user || !req.user.sub) {
@@ -38,6 +39,7 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+// Get a single order (authenticated)
 router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
     if (!req.user || !req.user.sub) {
@@ -57,19 +59,45 @@ router.get('/', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.get('/bkash/callback', async (req, res) => {
+/**
+ * PayStation Payment Callback
+ *
+ * PayStation redirects the customer here after payment with URL params:
+ *   ?status=Successful|Failed|Canceled&invoice_number=<orderNumber>&trx_id=<trxId>
+ *
+ * We verify the transaction server-side with PayStation's API before confirming,
+ * then redirect the user back to the event page on the client.
+ */
+router.get('/callback', async (req: Request, res: Response) => {
+  const { status, invoice_number, trx_id } = req.query;
+
+  console.log(`[CALLBACK] PayStation callback received: status=${status}, invoice=${invoice_number}, trxId=${trx_id}`);
+
+  if (!invoice_number || typeof invoice_number !== 'string') {
+    console.error('[CALLBACK] Missing invoice_number in callback');
+    return res.redirect(`${process.env.CLIENT_URL}/?payment=failed`);
+  }
+
   try {
-    const { orderId } = req.query;
-    const { paymentId } = req.query;
-    console.log(orderId, paymentId);
-    if (!orderId || !paymentId || !isValidObjectId(orderId as string)) {
-      throw new CustomError('Invalid order ID or payment ID', 400);
+    const result = await handlePaystationCallbackService(
+      invoice_number,
+      (status as string) || 'Failed'
+    );
+
+    if (result.success) {
+      // Redirect back to the event page with success flag
+      if (result.eventId) {
+        return res.redirect(`${process.env.CLIENT_URL}/events/${result.eventId}?payment=success`);
+      }
+      // Fallback: send to wallet if we can't determine the event
+      return res.redirect(`${process.env.CLIENT_URL}/wallet?payment=success`);
+    } else {
+      // Payment failed or cancelled — send back to home with error flag
+      return res.redirect(`${process.env.CLIENT_URL}/?payment=failed`);
     }
-    const result = await handleBkashCallbackService(orderId as string, paymentId as string);
-    
-    res.status(200).json(result);
   } catch (error: any) {
-    return handleError(error, res);
+    console.error('[CALLBACK] Error processing PayStation callback:', error?.message);
+    return res.redirect(`${process.env.CLIENT_URL}/?payment=failed`);
   }
 });
 
