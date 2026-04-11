@@ -21,7 +21,7 @@ const Contact: React.FC = () => {
   const handleExplore = () => router.push('/events');
 
   return (
-    <div className="min-h-screen bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
+    <div className="min-h-screen mt-24 bg-neutral-0 font-sans selection:bg-brand-100 selection:text-brand-900">
 
       {/* Hero Section */}
       <section className="relative pt-12 pb-20 px-6 overflow-hidden">

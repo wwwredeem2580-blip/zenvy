@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Instagram, Twitter, Facebook } from 'lucide-react';
+import { Logo } from '@/components/shared/Logo';
 
 export const Footer: React.FC = () => {
   const router = useRouter();
@@ -14,12 +15,9 @@ export const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-1">
             <button 
               onClick={() => router.push('/')}
-              className="text-2xl font-serif tracking-tight font-semibold flex items-center gap-2 text-bg mb-6"
+              className="flex items-center mb-6"
             >
-              <div className="w-8 h-8 bg-bg rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-ink rounded-sm rotate-45" />
-              </div>
-              Zenvy
+              <Logo variant="full" className="h-8 w-auto text-bg" />
             </button>
             <p className="text-sm leading-relaxed mb-8">
               The premier event discovery and ticketing platform for the modern Bangladeshi audience.

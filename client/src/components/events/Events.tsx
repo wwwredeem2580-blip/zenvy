@@ -382,7 +382,7 @@ export default function Events() {
               {user?.role === 'host' && (
                 <button
                   onClick={() => router.push('/host/events/create')}
-                  className="flex items-center gap-1.5 px-4 py-1.5 bg-[#4d33de] text-white text-[13px] rounded-lg hover:bg-[#3d26c0] transition-colors"
+                  className="flex whitespace-nowrap items-center gap-1.5 px-4 py-1.5 bg-[#4d33de] text-white text-[10px] sm:text-[13px] rounded-lg hover:bg-[#3d26c0] transition-colors"
                 >
                   <Plus className="w-4 h-4" /> Create Event
                 </button>

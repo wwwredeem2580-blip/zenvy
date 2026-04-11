@@ -11,6 +11,7 @@ import {
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/auth';
 import { authService } from '@/lib/api/auth';
+import { Logo } from '@/components/shared/Logo';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -51,16 +52,13 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 px-6 md:px-12 py-6 flex justify-between items-center ${scrolled || pathname !== '/' ? 'bg-bg/80 backdrop-blur-md border-b border-ink/5' : ''}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-[5000] transition-all duration-500 px-6 md:px-12 py-6 flex justify-between items-center ${scrolled || pathname !== '/' ? 'bg-bg/80 backdrop-blur-md border-b border-ink/5' : ''}`}>
         <div className="flex items-center gap-12">
           <button 
             onClick={() => router.push('/')}
-            className="text-2xl font-serif tracking-tight font-semibold flex items-center gap-2"
+            className="flex items-center"
           >
-            <div className="w-8 h-8 bg-ink rounded-full flex items-center justify-center">
-              <div className="w-3 h-3 bg-bg rounded-sm rotate-45" />
-            </div>
-            Zenvy
+            <Logo variant="full" className="h-7 w-auto text-ink" animated />
           </button>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium uppercase tracking-widest">
@@ -91,7 +89,7 @@ export const Navbar: React.FC = () => {
               </button>
               <button 
                 onClick={() => router.push('/onboarding')}
-                className="bg-ink text-bg px-6 py-2.5 rounded-full text-sm font-medium uppercase tracking-widest hover:bg-ink/90 transition-all"
+                className="bg-ink text-bg px-6 py-2.5 rounded-full text-[8px] sm:text-[13px] font-medium uppercase tracking-widest hover:bg-ink/90 transition-all"
               >
                 Get Started
               </button>
@@ -119,7 +117,7 @@ export const Navbar: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-4 w-64 bg-white border border-ink/5 shadow-2xl py-4 z-50"
+                    className="absolute right-0 mt-4 w-64 bg-white border border-ink/5 shadow-2xl py-4 z-[5001]"
                   >
                     <div className="px-6 py-3 border-b border-ink/5 mb-2">
                       <p className="text-sm font-bold truncate">{user.firstName} {user.lastName}</p>
@@ -178,7 +176,7 @@ export const Navbar: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-0 bg-bg z-[60] p-12 flex flex-col justify-center gap-12"
+            className="fixed inset-0 bg-bg z-[5001] p-12 flex flex-col justify-center gap-12"
           >
             <button 
               onClick={() => setIsMenuOpen(false)}

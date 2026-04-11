@@ -37,7 +37,7 @@ export default function NotFound() {
   };
 
   return (
-    <div className="min-h-screen bg-wix-gray-bg flex items-center justify-center relative overflow-hidden font-sans selection:bg-wix-purple/20 selection:text-wix-purple px-4">
+    <div className="min-h-screen mt-32 lg:mt-0 bg-wix-gray-bg flex items-center justify-center relative overflow-hidden font-sans selection:bg-wix-purple/20 selection:text-wix-purple px-4">
       {/* Abstract Background Shapes */}
       <div className="absolute inset-0 pointer-events-none flex items-center justify-center opacity-40">
         <motion.div 
