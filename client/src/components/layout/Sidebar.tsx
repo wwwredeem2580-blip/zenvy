@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/lib/context/auth";
 import { authService } from "@/lib/api/auth";
 import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -72,7 +73,13 @@ export default function Sidebar() {
         </button>
         <div className="flex items-center gap-4">
           {user ? (
-            <div onClick={() => user?.role === 'host' ? router.push('/host/profile') : router.push('/wallet')} className={`w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200 cursor-pointer`}>
+            <div 
+              onClick={() => user?.role === 'host' ? router.push('/host/profile') : null} 
+              className={cn(
+                "w-8 h-8 rounded-full bg-slate-100 overflow-hidden border border-slate-200",
+                user.role === 'host' ? "cursor-pointer hover:border-slate-400" : "cursor-default"
+              )}
+            >
               <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'default'}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
           ) : (

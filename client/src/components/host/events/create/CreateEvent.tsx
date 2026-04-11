@@ -576,9 +576,9 @@ export const CreateEvent: React.FC<RegisterProps> = ({ onSuccess, onGoBack }) =>
             <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
             {step === 'basic' ? 'Back' : 'Previous'}
           </button>
-          <div className="flex gap-1.5">
+          <div className="flex gap-1">
             {(['basic', 'details', 'venue', 'schedule', 'verification', 'tickets', 'platform'] as Step[]).map((s) => (
-              <div key={s} className={`h-1 w-8 transition-all duration-500 ${step === s ? 'bg-wix-text-dark' : 'bg-gray-200'}`} />
+              <div key={s} className={`h-1 w-4 sm:w-8 transition-all duration-500 ${step === s ? 'bg-wix-text-dark' : 'bg-gray-200'}`} />
             ))}
           </div>
         </div>

@@ -12,11 +12,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/context/auth';
 import { authService } from '@/lib/api/auth';
 import { Logo } from '@/components/shared/Logo';
+import { cn } from '@/lib/utils';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   const router = useRouter();
   const pathname = usePathname();
@@ -31,12 +31,12 @@ export const Navbar: React.FC = () => {
   // Close menus on path change
   useEffect(() => {
     setIsMenuOpen(false);
-    setIsProfileOpen(false);
   }, [pathname]);
 
   const navLinks = [
     { name: 'Explore', href: '/events' },
     { name: 'Dashboard', href: '/host/dashboard', role: 'host' },
+    { name: 'Create Event', href: '/host/events/create', role: 'host' },
     { name: 'Wallet', href: '/wallet', role: 'user' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
@@ -95,10 +95,20 @@ export const Navbar: React.FC = () => {
               </button>
             </>
           ) : (
-            <div className="relative">
+            <div className="flex items-center gap-4">
               <button 
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="w-10 h-10 rounded-full border border-ink/10 flex items-center justify-center hover:bg-ink/5 transition-all overflow-hidden"
+                onClick={handleLogout}
+                className="hidden md:block text-[10px] font-bold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
+              >
+                Sign Out
+              </button>
+              
+              <button 
+                onClick={() => user.role === 'host' ? router.push('/host/profile') : null}
+                className={cn(
+                  "w-10 h-10 rounded-full border border-ink/10 flex items-center justify-center transition-all overflow-hidden",
+                  user.role === 'host' ? "hover:scale-105 hover:border-ink/30 cursor-pointer" : "cursor-default"
+                )}
               >
                 {user.email ? (
                   <img 
@@ -110,52 +120,6 @@ export const Navbar: React.FC = () => {
                   <User size={20} />
                 )}
               </button>
-
-              <AnimatePresence>
-                {isProfileOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-4 w-64 bg-white border border-ink/5 shadow-2xl py-4 z-[5001]"
-                  >
-                    <div className="px-6 py-3 border-b border-ink/5 mb-2">
-                      <p className="text-sm font-bold truncate">{user.firstName} {user.lastName}</p>
-                      <p className="text-[10px] uppercase tracking-widest opacity-40">{user.role}</p>
-                    </div>
-                    {user.role === 'host' && (
-                      <button 
-                        onClick={() => router.push('/host/dashboard')}
-                        className="w-full px-6 py-3 text-left text-sm hover:bg-ink/5 transition-colors"
-                      >
-                        Dashboard
-                      </button>
-                    )}
-                    {user.role === 'user' && (
-                      <button 
-                        onClick={() => router.push('/wallet')}
-                        className="w-full px-6 py-3 text-left text-sm hover:bg-ink/5 transition-colors"
-                      >
-                        My Wallet
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => router.push('/host/profile')}
-                      className="w-full px-6 py-3 text-left text-sm hover:bg-ink/5 transition-colors"
-                    >
-                      Profile Settings
-                    </button>
-                    <div className="border-t border-ink/5 mt-2 pt-2">
-                      <button 
-                        onClick={handleLogout}
-                        className="w-full px-6 py-3 text-left text-sm text-red-500 hover:bg-red-50 transition-colors"
-                      >
-                        Sign Out
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           )}
           
@@ -191,12 +155,20 @@ export const Navbar: React.FC = () => {
                   <button 
                     key={link.name}
                     onClick={() => router.push(link.href)}
-                    className="text-left"
+                    className="text-left text-3xl md:text-5xl"
                   >
                     {link.name}
                   </button>
                 );
               })}
+              {user && (
+                <button 
+                  onClick={handleLogout}
+                  className="text-left font-sans text-2xl uppercase tracking-[0.2em] text-red-500 mt-4"
+                >
+                  Sign Out
+                </button>
+              )}
               {!user && (
                 <button onClick={() => router.push('/auth?tab=login')} className="text-left font-sans text-2xl uppercase tracking-[0.2em] opacity-40">Sign In</button>
               )}
