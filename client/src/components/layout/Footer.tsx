@@ -44,8 +44,8 @@ export const Footer: React.FC = () => {
             <ul className="space-y-4 text-sm">
               <li><button onClick={() => router.push('/host/dashboard')} className="hover:text-bg transition-colors">Dashboard</button></li>
               <li><button onClick={() => router.push('/host/events/create')} className="hover:text-bg transition-colors">Create Event</button></li>
+              <li><button onClick={() => router.push('/legal/organizer-agreement')} className="hover:text-bg transition-colors">Organizer Agreement</button></li>
               <li><a href="#" className="hover:text-bg transition-colors">Pricing</a></li>
-              <li><a href="#" className="hover:text-bg transition-colors">Resources</a></li>
             </ul>
           </div>
 
@@ -53,8 +53,8 @@ export const Footer: React.FC = () => {
             <h5 className="text-bg font-medium mb-6 uppercase tracking-widest text-xs">Support</h5>
             <ul className="space-y-4 text-sm">
               <li><a href="#" className="hover:text-bg transition-colors">Help Center</a></li>
-              <li><a href="#" className="hover:text-bg transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-bg transition-colors">Privacy Policy</a></li>
+              <li><button onClick={() => router.push('/legal/terms')} className="hover:text-bg transition-colors">Terms of Service</button></li>
+              <li><button onClick={() => router.push('/legal/privacy')} className="hover:text-bg transition-colors">Privacy Policy</button></li>
               <li><button onClick={() => router.push('/contact')} className="hover:text-bg transition-colors">Contact Us</button></li>
             </ul>
           </div>

@@ -3,28 +3,30 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Shield, Lock, Eye, FileText, Server } from 'lucide-react';
+import { 
+  ArrowLeft, Shield, Lock, Eye, FileText, Server, 
+  Database, Settings, Fingerprint, Share2, UserCheck, 
+  History, Link, FileEdit, Mail 
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
 const sections = [
-  { id: 'collection', label: 'Info Collection', icon: <Eye size={16} /> },
-  { id: 'usage', label: 'How We Use It', icon: <FileText size={16} /> },
-  { id: 'sharing', label: 'Sharing & Disclosure', icon: <Server size={16} /> },
-  { id: 'retention', label: 'Data Retention', icon: <Database size={16} /> },
-  { id: 'rights', label: 'Your Rights', icon: <Shield size={16} /> },
+  { id: 'collection', label: 'Collection', icon: <Database size={16} /> },
+  { id: 'usage', label: 'Usage', icon: <Settings size={16} /> },
+  { id: 'cookies', label: 'Cookies', icon: <Fingerprint size={16} /> },
+  { id: 'sharing', label: 'Sharing', icon: <Share2 size={16} /> },
   { id: 'security', label: 'Security', icon: <Lock size={16} /> },
+  { id: 'rights', label: 'Rights', icon: <UserCheck size={16} /> },
+  { id: 'retention', label: 'Retention', icon: <History size={16} /> },
+  { id: 'third-party', label: 'Third-party', icon: <Link size={16} /> },
+  { id: 'changes', label: 'Changes', icon: <FileEdit size={16} /> },
 ];
-
-import { Database } from 'lucide-react';
 
 export default function PrivacyPolicyPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState('collection');
 
-  const handleLogin = () => router.push('/auth?tab=login');
-  const handleGetStarted = () => router.push('/onboarding');
-  
   // Smooth scroll handler
   const scrollTo = (id: string) => {
     const element = document.getElementById(id);
@@ -87,7 +89,7 @@ export default function PrivacyPolicyPage() {
           >
             <span className="px-3 py-1 rounded-full bg-brand-50 text-brand-700 font-medium text-xs uppercase tracking-wider">Legal</span>
             <span>•</span>
-            <span>Last Updated: February 9, 2026</span>
+            <span>Last Updated: April 12, 2026</span>
           </motion.div>
         </div>
       </div>
@@ -124,127 +126,173 @@ export default function PrivacyPolicyPage() {
             className="prose prose-neutral prose-lg max-w-none prose-headings:font-[300] prose-headings:tracking-tight prose-p:font-[300] prose-p:text-neutral-600 prose-li:font-[300] prose-li:text-neutral-600 prose-strong:font-medium prose-strong:text-neutral-900"
           >
             <p className="lead text-2xl font-[250] text-neutral-800 leading-relaxed">
-              At Zenvy, we believe privacy is a fundamental right, not a feature setting. This document outlines exactly what we collect, why we collect it, and how we protect the data that powers your experience.
+              At Zenvy, we believe privacy is a fundamental right. This document outlines exactly what we collect, why we collect it, and how we protect your data.
             </p>
           </motion.div>
 
+          {/* 1. Information We Collect */}
           <div id="collection" className="scroll-mt-32 space-y-6">
              <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
-                <Eye size={24} />
+                <Database size={24} />
              </div>
-             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">1. Information We Collect</h2>
-             <p className="text-neutral-600 font-[300] leading-relaxed">
-               We collect information to provide a seamless ticketing experience. This includes data you explicitly provide and data we collect automatically.
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">1. Information We Collect</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed mb-4">
+               আমরা collect করি:
              </p>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-               <div className="p-6 rounded-2xl bg-neutral-50 border border-neutral-100">
-                  <h3 className="font-medium text-neutral-900 mb-2">You Provide</h3>
-                  <ul className="space-y-2 text-sm text-neutral-600 font-[300]">
-                    <li>• Account credentials (Name, Email)</li>
-                    <li>• Billing & Payment Details</li>
-                    <li>• Host Verification Documents (NID, Passport)</li>
-                    <li>• Event details and media</li>
-                  </ul>
-               </div>
-               <div className="p-6 rounded-2xl bg-neutral-50 border border-neutral-100">
-                  <h3 className="font-medium text-neutral-900 mb-2">We Collect</h3>
-                  <ul className="space-y-2 text-sm text-neutral-600 font-[300]">
-                    <li>• Device and browser information</li>
-                    <li>• Usage patterns and interaction data</li>
-                    <li>• IP address and location data</li>
-                    <li>• Transaction history</li>
-                  </ul>
-               </div>
-             </div>
-          </div>
-
-          <div id="usage" className="scroll-mt-32 space-y-6">
-             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
-                <FileText size={24} />
-             </div>
-             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">2. How We Use Your Information</h2>
-             <p className="text-neutral-600 font-[300] leading-relaxed">
-               Data isn't just stored; it's used to power the platform's core mechanics. We strictly use your data for:
-             </p>
-             <ul className="space-y-4 mt-4">
-               {[
-                 "Processing secure transactions and payouts.",
-                 "Verifying host identity to prevent fraud.",
-                 "Delivering digital tickets and QR codes.",
-                 "Communicating important event updates or cancellations.",
-                 "Preventing platform abuse and ensuring safety."
-               ].map((item, i) => (
-                 <li key={i} className="flex items-start gap-3 text-neutral-600 font-[300]">
-                   <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2.5 shrink-0" />
-                   {item}
-                 </li>
-               ))}
+             <ul className="space-y-4">
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2.5 shrink-0" />
+                 Name, phone number, email
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2.5 shrink-0" />
+                 Location data
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-blue-300 mt-2.5 shrink-0" />
+                 Payment info (processed via third-party যেমন bKash, Nagad, SSLCommerz)
+               </li>
              </ul>
           </div>
 
-          <div id="sharing" className="scroll-mt-32 space-y-6">
+          {/* 2. How We Use Data */}
+          <div id="usage" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mb-6">
+                <Settings size={24} />
+             </div>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">2. How We Use Data</h2>
+             <ul className="space-y-4">
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 mt-2.5 shrink-0" />
+                 Ticket processing
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 mt-2.5 shrink-0" />
+                 Customer support
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 mt-2.5 shrink-0" />
+                 Marketing & notifications
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-300 mt-2.5 shrink-0" />
+                 Fraud prevention
+               </li>
+             </ul>
+          </div>
+
+          {/* 3. Cookies & Tracking */}
+          <div id="cookies" className="scroll-mt-32 space-y-6">
              <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-6">
-                <Server size={24} />
+                <Fingerprint size={24} />
              </div>
-             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">3. Sharing & Disclosure</h2>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">3. Cookies & Tracking</h2>
              <p className="text-neutral-600 font-[300] leading-relaxed">
-               We are not a data broker. We do not sell your personal information. We only share data when necessary for the service to function.
-             </p>
-             <div className="space-y-6 mt-6">
-                <div className="flex gap-4">
-                   <div className="w-1 bg-brand-200 rounded-full" />
-                   <div>
-                      <h4 className="font-medium text-neutral-900">With Event Organizers</h4>
-                      <p className="text-sm text-neutral-600 font-[300] mt-1">When you buy a ticket, the organizer receives your name and email to manage the guest list. They do not receive your payment info.</p>
-                   </div>
-                </div>
-                <div className="flex gap-4">
-                   <div className="w-1 bg-brand-200 rounded-full" />
-                   <div>
-                      <h4 className="font-medium text-neutral-900">Service Providers</h4>
-                      <p className="text-sm text-neutral-600 font-[300] mt-1">Trusted partners who handle specific functions like Payment Processing (SSL Commerz, Stripe) and Email Delivery.</p>
-                   </div>
-                </div>
-             </div>
-          </div>
-
-          <div id="retention" className="scroll-mt-32 space-y-6">
-             <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6">
-                <Database size={24} />
-             </div>
-             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">4. Data Retention</h2>
-             <p className="text-neutral-600 font-[300] leading-relaxed">
-               We retain personal data only as long as necessary.
-             </p>
-             <p className="text-neutral-600 font-[300] leading-relaxed">
-               For active accounts, we allow you to edit or delete data at any time. For legal and audit purposes, transaction records may be kept for a longer period as required by tax laws in Bangladesh.
+               Zenvy cookies এবং tracking tools (Google Analytics, Firebase) ব্যবহার করে user experience improve করার জন্য
              </p>
           </div>
 
-          <div id="rights" className="scroll-mt-32 space-y-6">
-             <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
-                <Shield size={24} />
+          {/* 4. Data Sharing */}
+          <div id="sharing" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-brand-50 rounded-2xl flex items-center justify-center text-brand-600 mb-6">
+                <Share2 size={24} />
              </div>
-             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">5. Your Rights</h2>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                {['Access', 'Rectification', 'Erasure', 'Portability'].map((right) => (
-                  <div key={right} className="px-4 py-3 bg-neutral-50 rounded-lg border border-neutral-100 text-neutral-700 font-[350]">
-                     {right}
-                  </div>
-                ))}
-             </div>
-             <p className="text-neutral-600 font-[300] mt-4">
-               You can exercise these rights directly from your Account Settings or by contacting us.
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">4. Data Sharing</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed mb-4">
+               আমরা data share করতে পারি:
              </p>
+             <ul className="space-y-4">
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-brand-300 mt-2.5 shrink-0" />
+                 Event organizers-এর সাথে (ticket validation-এর জন্য)
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-brand-300 mt-2.5 shrink-0" />
+                 Payment gateway providers
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-brand-300 mt-2.5 shrink-0" />
+                 Legal requirement হলে authorities-এর সাথে
+               </li>
+             </ul>
           </div>
 
+          {/* 5. Data Security */}
           <div id="security" className="scroll-mt-32 space-y-6">
              <div className="w-12 h-12 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-6">
                 <Lock size={24} />
              </div>
-             <h2 className="text-3xl font-[300] tracking-tight text-neutral-950">6. Security</h2>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">5. Data Security</h2>
+             <ul className="space-y-4">
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-rose-300 mt-2.5 shrink-0" />
+                 SSL encryption ব্যবহার করা হয়
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-rose-300 mt-2.5 shrink-0" />
+                 User data secure রাখার জন্য industry-standard practices follow করা হয়
+               </li>
+             </ul>
+          </div>
+
+          {/* 6. User Rights */}
+          <div id="rights" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 mb-6">
+                <UserCheck size={24} />
+             </div>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">6. User Rights</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed mb-4">
+               User চাইলে:
+             </p>
+             <ul className="space-y-4">
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 mt-2.5 shrink-0" />
+                 নিজের data access করতে পারবে
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-indigo-300 mt-2.5 shrink-0" />
+                 Account delete করতে পারবে
+               </li>
+             </ul>
+          </div>
+
+          {/* 7. Data Retention */}
+          <div id="retention" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 mb-6">
+                <History size={24} />
+             </div>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">7. Data Retention</h2>
+             <ul className="space-y-4">
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-amber-300 mt-2.5 shrink-0" />
+                 প্রয়োজন অনুযায়ী data retain করা হয়
+               </li>
+               <li className="flex items-start gap-3 text-neutral-600 font-[300]">
+                 <div className="w-1.5 h-1.5 rounded-full bg-amber-300 mt-2.5 shrink-0" />
+                 Legal compliance অনুযায়ী data সংরক্ষণ করা হয়
+               </li>
+             </ul>
+          </div>
+
+          {/* 8. Third-party Services */}
+          <div id="third-party" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-6">
+                <Link size={24} />
+             </div>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">8. Third-party Services</h2>
              <p className="text-neutral-600 font-[300] leading-relaxed">
-               We employ industry-standard encryption (AES-256) for data at rest and TLS 1.3 for data in transit. Sensitive payout details are handled by compliant payment processors and never hit our servers directly.
+               Zenvy third-party services ব্যবহার করে (Google, Firebase, Payment Gateway)
+             </p>
+          </div>
+
+          {/* 9. Changes */}
+          <div id="changes" className="scroll-mt-32 space-y-6">
+             <div className="w-12 h-12 bg-slate-200 rounded-2xl flex items-center justify-center text-slate-800 mb-6">
+                <FileEdit size={24} />
+             </div>
+             <h2 className="text-xl md:text-2xl font-[400] tracking-tight text-neutral-950">9. Changes</h2>
+             <p className="text-neutral-600 font-[300] leading-relaxed">
+               Policy যেকোনো সময় update হতে পারে
              </p>
           </div>
 
