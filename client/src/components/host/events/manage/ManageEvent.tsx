@@ -9,6 +9,7 @@ import {
   Download, Plus, X, Clock, Trash2, AlertTriangle,
   Mail, Tag, Link as LinkIcon, ArrowLeft, Loader2,
   Scan, Copy, Upload, Pencil, Camera, Eye, Sparkles, BarChart3, Pause, Play,
+  Circle, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
@@ -47,7 +48,7 @@ const QuickActionButton = ({ icon: Icon, label, onClick }: any) => (
 );
 
 /* ─── Tabs ─── */
-const QuickActions = ({ ev, onRefetch }: { ev: any; onRefetch: () => Promise<void> }) => {
+const QuickActions = ({ ev, onRefetch, setActiveTab }: { ev: any; onRefetch: () => Promise<void>; setActiveTab: (t: string) => void }) => {
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
 
@@ -67,6 +68,19 @@ const QuickActions = ({ ev, onRefetch }: { ev: any; onRefetch: () => Promise<voi
 
   const salesPaused = ev?.moderation?.sales?.paused ?? false;
   const canToggleSales = ev?.status === 'published' || ev?.status === 'live';
+
+  const [tasks, setTasks] = useState([
+    { id: 1, text: 'Export CSV from Attendees tab', done: false, action: () => setActiveTab('Attendees') },
+    { id: 2, text: 'Activate scanner session', done: false, action: () => setActiveTab('Checkin') },
+    { id: 3, text: 'Be prepared for manual check-in', done: false, action: () => setActiveTab('Checkin') },
+    { id: 4, text: 'Make sure to add scanner devices', done: false, action: () => setActiveTab('Checkin') },
+  ]);
+
+  const toggleTask = (id: number) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  };
+
+  const doneCount = tasks.filter(t => t.done).length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -100,17 +114,38 @@ const QuickActions = ({ ev, onRefetch }: { ev: any; onRefetch: () => Promise<voi
         </div>
       </div>
 
-      <div className="bg-ink p-6">
-        <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-white/50 mb-4">Immediate Tasks</h3>
-        <div className="flex flex-col gap-2">
-          <button className="flex items-center gap-3 w-full p-4 border border-white/10 text-white hover:bg-white/5 transition-all text-left">
-            <Megaphone className="w-4 h-4 text-white/40" />
-            <span className="text-[13px] font-bold">Email Attendees</span>
-          </button>
-          <button className="flex items-center gap-3 w-full p-4 border border-white/10 text-white hover:bg-white/5 transition-all text-left">
-            <Download className="w-4 h-4 text-white/40" />
-            <span className="text-[13px] font-bold">Download Recap</span>
-          </button>
+      <div className="flex flex-col gap-4">
+        <div className="flex justify-between items-center px-1">
+          <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-wix-text-muted">To-Do List</h3>
+          <span className="text-[11px] font-black uppercase tracking-widest text-ink">{doneCount}/{tasks.length} DONE</span>
+        </div>
+        
+        <div className="flex flex-col gap-3">
+          {tasks.map(t => (
+            <div 
+              key={t.id}
+              onClick={() => toggleTask(t.id)}
+              className="bg-gray-50/50 border border-gray-100 rounded-[20px] p-5 flex items-center gap-4 cursor-pointer group hover:bg-white hover:border-gray-200 transition-all active:scale-[0.98]"
+            >
+              <div 
+                className={`transition-colors ${t.done ? 'text-emerald-500' : 'text-gray-300'}`}
+              >
+                {t.done ? <CheckCircle2 size={24} /> : <Circle size={24} />}
+              </div>
+              <span className={`text-[14px] font-medium flex-1 transition-all ${t.done ? 'text-gray-400 line-through' : 'text-ink'}`}>
+                {t.text}
+              </span>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  t.action();
+                }}
+                className="text-gray-400 group-hover:text-ink transition-colors"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -140,30 +175,7 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </div>
 
-        <div className="bg-white border border-gray-200 p-8">
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-wix-text-dark">Performance Metrics</h2>
-            <button onClick={() => setActiveTab('Tickets')} className="bg-ink text-white px-5 py-2 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-wix-purple transition-all">Deep Analytics</button>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-6">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Net Sales</span>
-              <div className="text-[32px] font-bold tracking-tighter leading-none text-ink">{an?.totalTicketsSold ?? 0}<span className="text-[18px] text-gray-300 font-medium ml-2">/ {an?.capacity ?? 0}</span></div>
-            </div>
-            <div className="text-left sm:text-right border-l-2 sm:border-l-0 sm:border-r border-gray-100 pl-4 sm:pl-0 sm:pr-4 flex flex-col gap-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Generated Revenue</span>
-              <div className="text-[24px] font-mono font-bold text-ink flex items-center sm:justify-end gap-1">
-                <BDTIcon className="text-[16px]" />{an?.totalRevenue?.toLocaleString() ?? 0}
-              </div>
-            </div>
-          </div>
-          <div className="w-full h-4 bg-gray-100 border border-gray-200 overflow-hidden mb-2">
-            <div className="h-full bg-ink transition-all duration-700" style={{ width: `${soldPct}%` }} />
-          </div>
-          <div className="flex justify-between text-[9px] font-semibold uppercase tracking-widest text-gray-900">
-            <span>Entry Level</span><span>50% Efficiency</span><span>Full Capacity</span>
-          </div>
-        </div>
+
 
         <div className="bg-white border border-gray-200 p-8">
           <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center sm:justify-between mb-8 border-b border-gray-100 pb-4">
@@ -218,7 +230,7 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
         </div>
       </div>
 
-      <QuickActions ev={ev} onRefetch={onRefetch} />
+      <QuickActions ev={ev} onRefetch={onRefetch} setActiveTab={setActiveTab} />
     </div>
   );
 };
@@ -815,7 +827,7 @@ const TicketSidePanel = ({
 
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-[6000] flex justify-end">
       <div className="absolute inset-0 bg-black/40 animate-in fade-in duration-200" onClick={onClose} />
       <div className="relative w-[450px] max-w-full h-full bg-white border-l border-black flex flex-col animate-in slide-in-from-right duration-300">
         <div className="px-6 py-5 border-b border-black flex justify-between items-center bg-gray-50">
@@ -1371,11 +1383,11 @@ const EditDetailsModal = ({ isOpen, onClose, data, onRefetch }: { isOpen: boolea
                {coverUrl ? (
                  <>
                    <img src={coverUrl} className="w-full h-full object-cover" alt="Cover" />
-                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                      <button onClick={() => coverInputRef.current?.click()} className="bg-white text-ink px-6 py-2.5 text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
+                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center gap-4">
+                      <button onClick={() => coverInputRef.current?.click()} className="bg-white text-ink px-6 py-2.5 text-[11px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-100 transition-colors">
                         <Camera size={14} /> Change
                       </button>
-                      <button onClick={() => setCoverUrl('')} className="bg-red-500 text-white px-6 py-2.5 text-[11px] font-black uppercase tracking-widest">Remove</button>
+                      <button onClick={() => setCoverUrl('')} className="bg-red-500 text-white px-6 py-2.5 text-[11px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors">Remove</button>
                    </div>
                  </>
                ) : (
@@ -1495,12 +1507,7 @@ const EditDetailsModal = ({ isOpen, onClose, data, onRefetch }: { isOpen: boolea
 
 
 /* ─── Mobile Tab Strip ─── */
-const MobileTabStrip = ({ activeKey, onSelect }: { activeKey: string; onSelect: (k: string) => void }) => {
-  const tabs = [
-    { key: 'Overview', icon: BarChart2 }, { key: 'Attendees', icon: Users },
-    { key: 'Checkin', icon: CheckCircle, label: 'Check-in' }, { key: 'Tickets', icon: Ticket },
-    { key: 'Gallery', icon: ImageIcon }, { key: 'Marketing', icon: Megaphone }, { key: 'Settings', icon: Settings },
-  ];
+const MobileTabStrip = ({ activeKey, onSelect, tabs }: { activeKey: string; onSelect: (k: string) => void; tabs: { key: string; icon: any; label?: string }[] }) => {
   return (
     <div className="md:hidden flex overflow-x-auto bg-white border-b border-wix-border-light sticky top-0 z-20 px-4 py-3 gap-2">
       {tabs.map(t => (
@@ -1580,14 +1587,11 @@ export default function ManageEvent() {
     { key: 'Attendees', icon: Users, label: 'Attendees' },
     { key: 'Checkin', icon: CheckCircle, label: 'Check-in' },
     { key: 'Tickets', icon: Ticket, label: 'Tickets & Pricing' },
-    { key: 'Gallery', icon: ImageIcon, label: 'Gallery' },
-    { key: 'Marketing', icon: Megaphone, label: 'Marketing' },
-    { key: 'Settings', icon: Settings, label: 'Settings' },
   ].filter(t => visibleTabs.includes(t.key));
 
   return (
     <div className="min-h-screen mt-20 bg-wix-gray-bg text-wix-text-dark font-sans flex flex-col">
-      <MobileTabStrip activeKey={activeKey} onSelect={setActiveKey} />
+      <MobileTabStrip activeKey={activeKey} onSelect={setActiveKey} tabs={sidebarTabs} />
 
       <div className="flex flex-1">
         {/* Sidebar */}
@@ -1633,7 +1637,7 @@ export default function ManageEvent() {
               </div>
               {!loading && ev && (
                 <div className="flex items-center gap-3 shrink-0">
-                  <button onClick={() => router.push(`/events/${ev._id || id}`)} className="border border-wix-text-dark bg-white text-wix-text-dark px-5 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors">Preview</button>
+                  <button onClick={() => window.open(`/events/${ev._id || id}`, '_blank')} className="border border-wix-text-dark bg-white text-wix-text-dark px-5 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors">Preview</button>
                   {ev.status === 'approved' && ev.schedule?.startDate && new Date(ev.schedule.startDate) > new Date() && (
                     <button
                       onClick={handlePublishEvent}
