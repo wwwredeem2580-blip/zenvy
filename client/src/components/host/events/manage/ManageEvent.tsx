@@ -21,6 +21,20 @@ import { useNotification } from '@/lib/context/notification';
 import { BDTIcon } from '@/components/ui/Icons';
 import { cleanText } from '@/lib/utils';
 
+// Highlight Pulse Animation
+const highlightStyles = `
+  @keyframes highlight-pulse-zenvy {
+    0% { outline: 2px solid #4a2bed; outline-offset: 0; box-shadow: 0 0 0 0 rgba(74, 43, 237, 0.4); transform: scale(1); }
+    50% { outline: 2px solid #4a2bed; outline-offset: 4px; box-shadow: 0 0 0 10px rgba(74, 43, 237, 0); transform: scale(1.02); }
+    100% { outline: 2px solid #4a2bed; outline-offset: 0; box-shadow: 0 0 0 0 rgba(74, 43, 237, 0); transform: scale(1); }
+  }
+  .animate-focus-highlight {
+    animation: highlight-pulse-zenvy 1.5s infinite ease-in-out !important;
+    position: relative;
+    z-index: 50;
+  }
+`;
+
 /* ─── Shared UI ─── */
 const SidebarItem = ({ icon: Icon, label, isActive, onClick }: any) => (
   <button
@@ -49,9 +63,10 @@ const QuickActionButton = ({ icon: Icon, label, onClick }: any) => (
 );
 
 /* ─── Tabs ─── */
-const QuickActions = ({ ev, onRefetch, setActiveTab }: { ev: any; onRefetch: () => Promise<void>; setActiveTab: (t: string) => void }) => {
+const QuickActions = ({ ev, onRefetch, setActiveTab, triggerHighlight }: { ev: any; onRefetch: () => Promise<void>; setActiveTab: (t: string) => void; triggerHighlight: (tab: string, id: string) => void }) => {
   const { showNotification } = useNotification();
   const [loading, setLoading] = useState(false);
+
 
   const handleToggleSales = async () => {
     if (!ev?._id) return;
@@ -71,10 +86,10 @@ const QuickActions = ({ ev, onRefetch, setActiveTab }: { ev: any; onRefetch: () 
   const canToggleSales = ev?.status === 'published' || ev?.status === 'live';
 
   const [tasks, setTasks] = useState([
-    { id: 1, text: 'Export CSV from Attendees tab', done: false, action: () => setActiveTab('Attendees') },
-    { id: 2, text: 'Activate scanner session', done: false, action: () => setActiveTab('Checkin') },
-    { id: 3, text: 'Be prepared for manual check-in', done: false, action: () => setActiveTab('Checkin') },
-    { id: 4, text: 'Make sure to add scanner devices', done: false, action: () => setActiveTab('Checkin') },
+    { id: 1, text: 'Export CSV from Attendees tab', done: false, action: () => triggerHighlight('Attendees', 'export-csv-btn') },
+    { id: 2, text: 'Activate scanner session', done: false, action: () => triggerHighlight('Checkin', 'activate-scanner-btn') },
+    { id: 3, text: 'Be prepared for manual check-in', done: false, action: () => triggerHighlight('Checkin', 'manual-checkin-input') },
+    { id: 4, text: 'Make sure to add scanner devices', done: false, action: () => triggerHighlight('Checkin', 'add-device-btn') },
   ]);
 
   const toggleTask = (id: number) => {
@@ -154,9 +169,10 @@ const QuickActions = ({ ev, onRefetch, setActiveTab }: { ev: any; onRefetch: () 
 };
 
 /* ─── Tabs ─── */
-const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: (t: string) => void; data: HostEventDetailsResponse | null; onEdit: () => void; onRefetch: () => Promise<void> }) => {
+const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch, triggerHighlight }: { setActiveTab: (t: string) => void; data: HostEventDetailsResponse | null; onEdit: () => void; onRefetch: () => Promise<void>; triggerHighlight: (tab: string, id: string) => void }) => {
   const ev = data?.event;
   const an = data?.analytics;
+
   const soldPct = an?.ticketsSoldPercentage ?? 0;
   
   const [descExpanded, setDescExpanded] = useState(false);
@@ -231,14 +247,15 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
         </div>
       </div>
 
-      <QuickActions ev={ev} onRefetch={onRefetch} setActiveTab={setActiveTab} />
+      <QuickActions ev={ev} onRefetch={onRefetch} setActiveTab={setActiveTab} triggerHighlight={triggerHighlight} />
     </div>
   );
 };
 
-const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
+const AttendeesTab = ({ data, highlightId }: { data: HostEventDetailsResponse | null; highlightId: string | null }) => {
   const { id: eventId } = useParams();
   const [orders, setOrders] = useState<any[]>([]);
+
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showAll, setShowAll] = useState(false);
@@ -347,9 +364,10 @@ const AttendeesTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
 };
 
 
-const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
+const CheckinTab = ({ data, highlightId }: { data: HostEventDetailsResponse | null; highlightId: string | null }) => {
   const stats = data?.analytics?.checkInStats;
   const checkedIn = stats?.checkedIn ?? 0;
+
   const total = stats?.total ?? 0;
   const remaining = total - checkedIn;
   const eventId = data?.event?._id;
@@ -543,9 +561,10 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
             <h3 className="text-[18px] font-medium text-black mb-2">Scanner Session is Inactive</h3>
             <p className="text-[14px] text-wix-text-muted max-w-[480px] mb-8">Activate a session to generate a shareable scanner link and authorize devices to scan tickets for this event.</p>
             <button
+              id="activate-scanner-btn"
               onClick={handleCreateSession}
               disabled={creating || !eventId}
-              className="bg-black text-white px-8 py-4 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
+              className={`bg-black text-white px-8 py-4 text-[13px] font-bold uppercase tracking-widest hover:bg-gray-800 transition-all disabled:opacity-50 flex items-center gap-2 ${highlightId === 'activate-scanner-btn' ? 'animate-focus-highlight' : ''}`}
             >
               {creating && <Loader2 className="w-4 h-4 animate-spin" />}
               {creating ? 'Activating...' : 'Activate Session'}
@@ -582,10 +601,14 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
             </div>
 
             {/* Connected Devices */}
-            <div className="border border-black bg-white">
+            <div className={`border border-black bg-white transition-all ${highlightId === 'add-device-btn' ? 'animate-focus-highlight' : ''}`}>
               <div className="p-6 border-b border-black flex justify-between items-center bg-gray-50">
                 <h3 className="text-[16px] font-bold text-black">Connected Devices ({devices.length}/{session?.session?.maxDevices ?? 5})</h3>
-                <button onClick={handleAddDevice} className="border border-black bg-white px-4 py-2 text-[12px] font-bold uppercase tracking-widest hover:bg-gray-100 transition-colors flex items-center gap-2">
+                <button 
+                  id="add-device-btn"
+                  onClick={handleAddDevice} 
+                  className="border border-black bg-white px-4 py-2 text-[12px] font-bold uppercase tracking-widest hover:bg-100 transition-colors flex items-center gap-2"
+                >
                   <Plus className="w-4 h-4" /> Add Device
                 </button>
               </div>
@@ -670,9 +693,10 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
           )}
 
           {!verificationResult ? (
-            <div className="relative" ref={manualDropdownRef}>
+            <div className={`relative ${highlightId === 'manual-checkin-input' ? 'animate-focus-highlight' : ''}`} ref={manualDropdownRef}>
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-gray-400" />
               <input
+                id="manual-checkin-input"
                 type="text"
                 value={manualQuery}
                 onChange={e => setManualQuery(e.target.value.toUpperCase())}
@@ -1452,39 +1476,6 @@ const EditDetailsModal = ({ isOpen, onClose, data, onRefetch }: { isOpen: boolea
               </div>
             </div>
           )}
-
-          {/* Gallery Snapshot */}
-          {/* <div className="flex flex-col gap-4">
-             <div className="flex justify-between items-center">
-               <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-wix-text-muted">{isApproved ? 'Part 3' : 'Part 2'}: Gallery Archive</h3>
-               <button onClick={() => galleryInputRef.current?.click()} className="text-[11px] font-black uppercase tracking-widest text-wix-purple hover:underline flex items-center gap-1">
-                 <Plus size={14} /> Add Media
-               </button>
-             </div>
-             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {gallery.map((img, i) => (
-                  <div key={i} className="relative w-32 h-32 shrink-0 border border-gray-200 group overflow-hidden">
-                    <img src={img.url} className="w-full h-full object-cover" alt="" />
-                    <button 
-                      onClick={() => setGallery(prev => prev.filter((_, idx) => idx !== i))}
-                      className="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                    >
-                      <Trash2 size={24} />
-                    </button>
-                  </div>
-                ))}
-                <div 
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="w-32 h-32 bg-gray-50 border-2 border-dashed border-ink/20 flex flex-col items-center justify-center text-ink/20 hover:text-ink hover:border-ink transition-all cursor-pointer"
-                >
-                  {uploading === 'gallery' ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
-                </div>
-                <input ref={galleryInputRef} type="file" className="hidden" accept="image/*" onChange={e => {
-                  if (e.target.files?.[0]) handleUpload(e.target.files[0], 'gallery');
-                  e.target.value = '';
-                }} />
-             </div>
-          </div> */}
         </div>
 
         {/* Footer */}
@@ -1503,9 +1494,6 @@ const EditDetailsModal = ({ isOpen, onClose, data, onRefetch }: { isOpen: boolea
     </div>
   );
 };
-
-/* ─── Tickets Tab ─── */
-
 
 /* ─── Mobile Dock ─── */
 const MobileDock = ({ activeKey, onSelect, tabs }: { activeKey: string; onSelect: (k: string) => void; tabs: { key: string; icon: any; label?: string }[] }) => {
@@ -1570,10 +1558,43 @@ export default function ManageEvent() {
   const [activeKey, setActiveKey] = useState('Overview');
   const [showEditModal, setShowEditModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [highlightId, setHighlightId] = useState<string | null>(null);
 
   const router = useRouter();
   const { id } = useParams();
   const { showNotification } = useNotification();
+
+  const triggerHighlight = (tab: string, id: string) => {
+    setActiveKey(tab);
+    setHighlightId(id);
+  };
+
+  useEffect(() => {
+    if (highlightId) {
+      const scrollTimer = setTimeout(() => {
+        const el = document.getElementById(highlightId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 300);
+
+      const clearTimer = setTimeout(() => {
+        setHighlightId(null);
+      }, 4000);
+
+      return () => {
+        clearTimeout(scrollTimer);
+        clearTimeout(clearTimer);
+      };
+    }
+  }, [highlightId, activeKey]);
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = highlightStyles;
+    document.head.appendChild(style);
+    return () => { document.head.removeChild(style); };
+  }, []);
 
   const fetchEventData = async () => {
     try {
@@ -1707,9 +1728,9 @@ export default function ManageEvent() {
               </div>
             ) : (
               <div key={activeKey}>
-                {activeKey === 'Overview' && <OverviewTab setActiveTab={setActiveKey} data={data} onEdit={() => setShowEditModal(true)} onRefetch={fetchEventData} />}
-                {activeKey === 'Attendees' && <AttendeesTab data={data} />}
-                {activeKey === 'Checkin' && <CheckinTab data={data} />}
+                {activeKey === 'Overview' && <OverviewTab setActiveTab={setActiveKey} triggerHighlight={triggerHighlight} data={data} onEdit={() => setShowEditModal(true)} onRefetch={fetchEventData} />}
+                {activeKey === 'Attendees' && <AttendeesTab data={data} highlightId={highlightId} />}
+                {activeKey === 'Checkin' && <CheckinTab data={data} highlightId={highlightId} />}
                 {activeKey === 'Tickets' && <TicketsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
                 {activeKey === 'Gallery' && <GalleryTab data={data} onUpdate={setData} />}
                 {activeKey === 'Marketing' && <MarketingTab />}
