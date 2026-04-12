@@ -22,21 +22,37 @@ import {
   Minus,
   Plus,
   ChevronRight,
+  Ticket,
+  Eye,
 } from 'lucide-react';
 import { BDTIcon } from '../ui/Icons';
 
 const MAX_TICKETS_PER_ORDER = 5;
 const PLATFORM_FEE = 0;
 
-/* ─── SVG Icons ─── */
-const ChipIcon = () => (
-  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+/* ─── Premium Ticket Icons ─── */
+const TicketPerforation = () => (
+  <div className="absolute top-0 right-0 h-full w-[2px] hidden sm:flex flex-col items-center justify-between py-1">
+    <div className="w-6 h-6 rounded-full bg-white border border-black/5 absolute -top-3 -right-3 z-10" />
+    <div className="h-full border-r-[1.5px] border-dotted border-current opacity-20" />
+    <div className="w-6 h-6 rounded-full bg-white border border-black/5 absolute -bottom-3 -right-3 z-10" />
+  </div>
+);
+
+const ChipIcon = ({ className }: { className?: string }) => (
+  <svg width="40" height="30" viewBox="0 0 40 30" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     <rect x="1" y="1" width="38" height="28" rx="4" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M1 10H10V20H1" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M39 10H30V20H39" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M15 1V30" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M25 1V30" stroke="currentColor" strokeWidth="1.5"/>
     <path d="M15 15H25" stroke="currentColor" strokeWidth="1.5"/>
+  </svg>
+);
+
+const BarcodeIcon = ({ className }: { className?: string }) => (
+  <svg width="40" height="150" viewBox="0 0 40 150" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M5 0V150M12 0V150M18 0V150M22 0V150M30 0V150M35 0V150M10 0V150M25 0V150M38 0V150" stroke="currentColor" strokeWidth="1.5"/>
   </svg>
 );
 
@@ -91,7 +107,175 @@ const MinimalMap = ({ venue, coordinates }: { venue?: string; coordinates?: numb
 };
 
 
-/* ─── Main EventDetails Component ─── */
+/* ─── Selectable Premium Ticket card ─── */
+const SelectableTicketCard = ({ 
+  ticket, 
+  qty, 
+  available, 
+  onIncrement, 
+  onDecrement,
+  eventDate,
+  eventTime,
+  eventVenue
+}: { 
+  ticket: any; 
+  qty: number; 
+  available: number; 
+  onIncrement: () => void; 
+  onDecrement: () => void;
+  eventDate: string;
+  eventTime: string;
+  eventVenue: string;
+}) => {
+  const [isFlipped, setIsFlipped] = useState(false);
+  const tierName = ticket.tier || ticket.name || 'Standard';
+  const price = ticket.price?.amount ?? ticket.price ?? 0;
+  const isSoldOut = available === 0;
+
+  const isVIP = tierName.toLowerCase().includes('vip');
+  const isPremium = tierName.toLowerCase().includes('premium') || tierName.toLowerCase().includes('early');
+
+  // Theming based on ticket tier
+  const bgTheme = qty > 0 
+    ? 'bg-ink border-ink text-bg shadow-[0_20px_40px_rgba(0,0,0,0.3)]' 
+    : isVIP 
+      ? 'bg-neutral-950 border-[#D4AF37] border-2 text-white' 
+      : isPremium 
+        ? 'bg-neutral-900 border-slate-300 border-2 text-white' 
+        : 'bg-white border-neutral-200 text-ink';
+
+  const metallicAccent = isVIP 
+    ? 'bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-transparent bg-clip-text' 
+    : isPremium 
+      ? 'bg-gradient-to-r from-slate-400 via-slate-100 to-slate-500 text-transparent bg-clip-text' 
+      : '';
+
+  return (
+    <div className="w-full perspective-1000 h-[250px] sm:h-[180px]">
+      <motion.div
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="relative w-full h-full preserve-3d"
+      >
+        {/* --- FRONT SIDE --- */}
+        <div className={`absolute inset-0 w-full h-full backface-hidden flex flex-col sm:flex-row shadow-lg overflow-hidden transition-all duration-500 ${bgTheme}`}>
+          {/* Main Context Area */}
+          <div className="flex-1 p-6 relative flex flex-col justify-between h-full">
+            <TicketPerforation />
+            
+            <div className="flex flex-col gap-1">
+              <span className={`text-[9px] font-black uppercase tracking-[0.3em] mb-1 ${qty > 0 ? 'text-white/40' : isVIP || isPremium ? metallicAccent : 'text-wix-purple'}`}>
+                {isVIP ? 'Exclusive Pass' : isPremium ? 'Premium Entry' : 'Verified Access'}
+              </span>
+              <h4 className="text-[20px] font-serif tracking-tight leading-none">{tierName}</h4>
+            </div>
+
+            {/* <div className="grid grid-cols-2 gap-4 mt-3">
+              <div className="flex flex-col gap-1">
+                <span className={`text-[8px] font-black uppercase tracking-[0.2em] opacity-40 ${qty > 0 ? 'text-white/60' : 'text-ink/60'}`}>Date</span>
+                <span className={`text-[14px] font-wix font-normal leading-none ${qty > 0 ? 'text-bg' : 'text-ink'}`}>{eventDate}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className={`text-[8px] font-black uppercase tracking-[0.2em] opacity-40 ${qty > 0 ? 'text-white/60' : 'text-ink/60'}`}>Time</span>
+                <span className={`text-[14px] font-wix font-normal leading-none ${qty > 0 ? 'text-bg' : 'text-ink'}`}>{eventTime}</span>
+              </div>
+            </div> */}
+
+            <div className={`text-[12px] font-wix tracking-widest uppercase pt-3 border-t mt-4 flex justify-between items-center ${qty > 0 ? 'border-white/10' : 'border-black/10'}`}>
+              <span className={`text-[10px] font-bold ${qty > 0 ? 'text-bg' : 'text-ink'}`}>Price/Ticket -------- {price === 0 ? 'FREE' : <><span className='font-mono text-[12px]'>৳</span><span className='text-[20px]'>{price.toLocaleString()}</span></>}</span>
+            </div>
+
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsFlipped(true); }}
+              className={`absolute top-6 right-6 p-2 rounded-full transition-colors ${qty > 0 ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
+            >
+              <Eye size={16} className="opacity-40" />
+            </button>
+          </div>
+
+          {/* Stacking Stub Area (Controls) */}
+          <div className={`sm:w-[32%] p-5 sm:p-0 flex items-center justify-center relative shrink-0 ${qty > 0 ? 'bg-white/5' : 'bg-neutral-50/50'}`}>
+            {/* Aesthetic Grain texture */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] hidden sm:block" />
+            
+            <div className="flex flex-col items-center gap-4 w-full px-4">
+              {isSoldOut ? (
+                <div className="w-full py-4 text-[9px] font-black uppercase tracking-[0.3em] bg-neutral-100 text-neutral-400 text-center border border-neutral-200">
+                  Sold Out
+                </div>
+              ) : qty > 0 ? (
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={onDecrement}
+                      className={`w-10 h-10 border flex items-center justify-center transition-all ${qty > 0 ? 'border-white/20 hover:bg-white/10' : 'border-black/10 hover:bg-black/5'}`}
+                    >
+                      <Minus size={14} />
+                    </button>
+                    <div className="flex-1 text-center font-serif text-xl">{qty}</div>
+                    <button 
+                      onClick={onIncrement}
+                      className={`w-10 h-10 border flex items-center justify-center transition-all ${qty > 0 ? 'border-white/20 hover:bg-white/10' : 'border-black/10 hover:bg-black/5'}`}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                  <div className="text-[9px] font-bold text-center uppercase tracking-widest opacity-40">Qty Selected</div>
+                </div>
+              ) : (
+                <button 
+                  onClick={onIncrement}
+                  className={`w-full py-4 text-[9px] font-black uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-2 shadow-sm ${
+                    isVIP || isPremium ? (isVIP ? 'bg-[#D4AF37] text-white' : 'bg-slate-400 text-white') : 'bg-ink text-bg'
+                  }`}
+                >
+                  <Ticket size={14} /> Add Ticket
+                </button>
+              )}
+            </div>
+            
+            {/* Visual Stub Label (Desktop only) */}
+            <div className={`absolute bottom-4 right-1/2 translate-x-1/2 text-[8px] font-black uppercase tracking-[0.4em] opacity-20 hidden sm:block ${qty > 0 ? 'text-white' : 'text-black'}`}>
+               Controls
+            </div>
+          </div>
+        </div>
+
+        {/* --- BACK SIDE (BENEFITS) --- */}
+        <div className={`absolute inset-0 w-full h-full backface-hidden flex flex-col rotate-y-180 shadow-lg overflow-hidden transition-all duration-500 ${bgTheme}`}>
+          <div className="flex-1 p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] border-b border-current/20 pb-1">Benefits</span>
+                <button 
+                  onClick={() => setIsFlipped(false)}
+                  className={`p-1 hover:bg-black/5 rounded-full ${qty > 0 ? 'text-white' : 'text-ink'}`}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <ul className="space-y-2">
+                {(ticket.benefits || ['Event access', 'Standard entry']).slice(0, 4).map((b: string, i: number) => (
+                  <li key={i} className="text-[11px] font-medium opacity-80 flex items-center gap-2 uppercase tracking-wide">
+                    <div className={`w-1 h-1 rounded-full ${qty > 0 ? 'bg-white' : 'bg-ink'} opacity-30`} /> {b}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            <p className="text-[10px] leading-tight opacity-50 italic">
+              {ticket.description || "Digital invitation. Terms and conditions apply."}
+            </p>
+          </div>
+          <div className={`h-12 border-t flex items-center justify-center ${qty > 0 ? 'border-white/10 bg-white/5' : 'border-black/5 bg-neutral-50'}`}>
+            <span className="text-[8px] font-black uppercase tracking-[0.5em] opacity-40">Flip to select</span>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 export default function EventDetails() {
   const router = useRouter();
   const params = useParams();
@@ -534,73 +718,26 @@ export default function EventDetails() {
           {/* ─── Tickets Section ─── */}
           <div id="tickets-section" className="pt-20 border-t border-ink/5">
             <h2 className="text-3xl font-serif mb-12">Select Your Experience</h2>
-            <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
               {(event.tickets || [])
                 .filter((t: any) => t.isVisible && t.isActive)
                 .map((ticket: any) => {
                   const ticketId = ticket._id || ticket.name;
                   const qty = ticketQuantities[ticketId] || 0;
                   const available = Math.max(0, (ticket.quantity || 0) - (ticket.sold || 0) - (ticket.reserved || 0));
-                  const isSoldOut = available === 0;
-                  const price = ticket.price?.amount ?? ticket.price ?? 0;
-                  const tierName = ticket.tier || ticket.name || 'Standard';
 
                   return (
-                    <div 
+                    <SelectableTicketCard
                       key={ticketId}
-                      className={`p-10 border transition-all group/card ${
-                        qty > 0 
-                          ? 'bg-ink text-bg border-ink' 
-                          : 'bg-white border-ink/5 hover:border-ink/20'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-8">
-                        <h4 className="text-2xl font-serif">{tierName}</h4>
-                        <span className="text-xl font-serif">
-                          {price === 0 ? 'FREE' : <>৳{price.toLocaleString()}</>}
-                        </span>
-                      </div>
-                      <p className={`text-sm leading-relaxed mb-8 font-light line-clamp-3 ${qty > 0 ? 'opacity-60' : 'text-ink-muted'}`}>
-                        {ticket.description || "Access to the main event with standard seating and amenities."}
-                      </p>
-                      <ul className="space-y-3 mb-10">
-                        {(ticket.benefits || ['Event access', 'Standard entry']).slice(0, 4).map((benefit: string, i: number) => (
-                          <li key={i} className="text-[10px] uppercase tracking-widest flex items-center gap-3">
-                            <ChevronRight size={12} className={qty > 0 ? 'text-bg/40' : 'text-ink/20'} /> 
-                            {benefit}
-                          </li>
-                        ))}
-                      </ul>
-                      
-                      {isSoldOut ? (
-                        <div className="w-full py-4 text-[10px] font-bold uppercase tracking-[0.3em] bg-neutral-100 text-neutral-400 text-center">
-                          Sold Out
-                        </div>
-                      ) : qty > 0 ? (
-                        <div className="flex items-center gap-4">
-                          <button 
-                            onClick={() => handleDecrement(ticketId)}
-                            className="w-12 h-12 border border-bg/20 flex items-center justify-center hover:bg-bg/10 transition-colors"
-                          >
-                            <Minus size={16} />
-                          </button>
-                          <div className="flex-1 text-center font-serif text-2xl">{qty}</div>
-                          <button 
-                            onClick={() => handleIncrement(ticketId, available)}
-                            className="w-12 h-12 border border-bg/20 flex items-center justify-center hover:bg-bg/10 transition-colors"
-                          >
-                            <Plus size={16} />
-                          </button>
-                        </div>
-                      ) : (
-                        <button 
-                          onClick={() => handleIncrement(ticketId, available)}
-                          className="w-full py-4 text-[10px] font-bold uppercase tracking-[0.3em] bg-ink text-bg group-hover/card:bg-ink/90 transition-all"
-                        >
-                          Add Ticket
-                        </button>
-                      )}
-                    </div>
+                      ticket={ticket}
+                      qty={qty}
+                      available={available}
+                      onIncrement={() => handleIncrement(ticketId, available)}
+                      onDecrement={() => handleDecrement(ticketId)}
+                      eventDate={new Date(event.schedule.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                      eventTime={new Date(event.schedule.startDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                      eventVenue={event.venue?.name || 'TBA'}
+                    />
                   );
                 })}
             </div>
