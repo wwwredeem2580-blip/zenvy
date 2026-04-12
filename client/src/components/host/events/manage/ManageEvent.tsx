@@ -2,6 +2,7 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart2, Users, CheckCircle, Ticket,
   Image as ImageIcon, Megaphone, Settings,
@@ -1506,15 +1507,57 @@ const EditDetailsModal = ({ isOpen, onClose, data, onRefetch }: { isOpen: boolea
 /* ─── Tickets Tab ─── */
 
 
-/* ─── Mobile Tab Strip ─── */
-const MobileTabStrip = ({ activeKey, onSelect, tabs }: { activeKey: string; onSelect: (k: string) => void; tabs: { key: string; icon: any; label?: string }[] }) => {
+/* ─── Mobile Dock ─── */
+const MobileDock = ({ activeKey, onSelect, tabs }: { activeKey: string; onSelect: (k: string) => void; tabs: { key: string; icon: any; label?: string }[] }) => {
+  const [showLabel, setShowLabel] = useState(false);
+
+  useEffect(() => {
+    setShowLabel(true);
+    const timer = setTimeout(() => setShowLabel(false), 2000);
+    return () => clearTimeout(timer);
+  }, [activeKey]);
+
   return (
-    <div className="md:hidden flex overflow-x-auto bg-white border-b border-wix-border-light sticky top-0 z-20 px-4 py-3 gap-2">
-      {tabs.map(t => (
-        <button key={t.key} onClick={() => onSelect(t.key)} className={`flex items-center gap-2 px-4 py-2 text-[13px] font-medium whitespace-nowrap border transition-colors ${activeKey === t.key ? 'bg-black text-white border-black' : 'bg-white text-wix-text-muted border-wix-border-light hover:border-black'}`}>
-          <t.icon className="w-3.5 h-3.5" />{t.label || t.key}
-        </button>
-      ))}
+    <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-[6000] w-fit">
+      <div className="bg-white/90 backdrop-blur-xl border border-gray-200/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] rounded-full p-2 flex items-center gap-1.5">
+        {tabs.map(t => {
+          const isActive = activeKey === t.key;
+          return (
+            <button
+              key={t.key}
+              onClick={() => onSelect(t.key)}
+              className="relative group p-3 rounded-full transition-all duration-300 active:scale-90"
+            >
+              {isActive && (
+                <motion.div
+                  layoutId="dock-bg"
+                  className="absolute inset-0 bg-ink rounded-full"
+                  transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+              <div className="relative z-10">
+                <t.icon 
+                  className={`w-5 h-5 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400'}`} 
+                />
+              </div>
+              
+              {/* Temporary Label (Glimpse on Active) */}
+              <AnimatePresence mode="wait">
+                {isActive && showLabel && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: -45 }}
+                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                    className="absolute left-1/2 -translate-x-1/2 bg-ink text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full pointer-events-none whitespace-nowrap shadow-lg"
+                  >
+                    {t.label || t.key}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
@@ -1590,8 +1633,8 @@ export default function ManageEvent() {
   ].filter(t => visibleTabs.includes(t.key));
 
   return (
-    <div className="min-h-screen mt-20 bg-wix-gray-bg text-wix-text-dark font-sans flex flex-col">
-      <MobileTabStrip activeKey={activeKey} onSelect={setActiveKey} tabs={sidebarTabs} />
+    <div className="min-h-screen mt-20 bg-wix-gray-bg text-wix-text-dark font-sans flex flex-col items-stretch">
+      <MobileDock activeKey={activeKey} onSelect={setActiveKey} tabs={sidebarTabs} />
 
       <div className="flex flex-1">
         {/* Sidebar */}
@@ -1654,7 +1697,7 @@ export default function ManageEvent() {
           </div>
 
           {/* Content */}
-          <div className="px-0 sm:px-8 py-8 sm:py-10">
+          <div className="px-0 sm:px-8 py-8 sm:py-10 pb-32 md:pb-10">
             {loading ? (
               <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-wix-purple" /></div>
             ) : error ? (
