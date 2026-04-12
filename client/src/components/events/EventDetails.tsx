@@ -98,6 +98,8 @@ export default function EventDetails() {
   const eventId = params?.id as string;
   const { user } = useAuth();
   const { showNotification } = useNotification();
+  const [showScrollButton, setShowScrollButton] = useState(false);
+
 
   // Core state
   const [event, setEvent] = useState<any>(null);
@@ -155,6 +157,20 @@ export default function EventDetails() {
     document.body.style.overflow = selectedImage || checkoutStep === 'success' ? 'hidden' : 'auto';
     return () => { document.body.style.overflow = 'auto'; };
   }, [selectedImage, checkoutStep]);
+
+  // Scroll listener for floating "Buy Tickets" button
+  useEffect(() => {
+    const handleScroll = () => {
+      const ticketsSection = document.getElementById('tickets-section');
+      if (ticketsSection) {
+        const rect = ticketsSection.getBoundingClientRect();
+        // Show button if tickets section is not yet fully in view and user has started scrolling
+        setShowScrollButton(window.scrollY > 400 && rect.top > window.innerHeight - 100);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Prevent browser-back loop: push a history entry when success modal opens
   // so pressing Back dismisses the modal instead of re-triggering it.
@@ -516,7 +532,7 @@ export default function EventDetails() {
           </div>
 
           {/* ─── Tickets Section ─── */}
-          <div className="pt-20 border-t border-ink/5">
+          <div id="tickets-section" className="pt-20 border-t border-ink/5">
             <h2 className="text-3xl font-serif mb-12">Select Your Experience</h2>
             <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-8">
               {(event.tickets || [])
@@ -720,6 +736,31 @@ export default function EventDetails() {
             onClose={() => setCheckoutStep('selection')}
             onSuccess={() => setCheckoutStep('success')}
           />
+        )}
+      </AnimatePresence>
+
+      {/* ─── Float Scroll Button ─── */}
+      <AnimatePresence>
+        {showScrollButton && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => document.getElementById('tickets-section')?.scrollIntoView({ behavior: 'smooth' })}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[500] bg-ink text-bg px-8 py-4 rounded-full flex items-center gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-bg/10 group overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-indigo-600 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[0.16, 1, 0.3, 1]" />
+            <span className="relative z-10 text-[10px] font-black uppercase tracking-[0.3em]">Buy Tickets Now</span>
+            <motion.div
+              animate={{ y: [0, 4, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              className="relative z-10"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </motion.div>
+          </motion.button>
         )}
       </AnimatePresence>
 
