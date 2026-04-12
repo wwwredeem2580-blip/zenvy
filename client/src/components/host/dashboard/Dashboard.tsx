@@ -202,7 +202,7 @@ const EventTable = ({ events, loading, router, onDelete }: { events: any[]; load
         <p className="text-[14px] text-wix-text-muted mb-8 max-w-xs mx-auto">It looks like you haven't created any events in this category yet.</p>
         <button 
           onClick={() => router.push('/host/events/create')}
-          className="bg-ink text-bg px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+          className="bg-ink text-bg px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all hover:active:scale-[0.98]"
         >
           Create New Event
         </button>
@@ -227,7 +227,7 @@ const EventTable = ({ events, loading, router, onDelete }: { events: any[]; load
                 ? router.push(`/host/events/create?draftId=${event.eventId}`)
                 : router.push(`/host/events/manage/${event.eventId}`)
             }
-            className="group bg-white flex flex-col shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            className="group bg-white flex flex-col hover:hover:-translate-y-1 transition-all duration-300 cursor-pointer"
           >
             {/* Card Header: Image + Status */}
             <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
@@ -237,7 +237,7 @@ const EventTable = ({ events, loading, router, onDelete }: { events: any[]; load
                 alt=""
               />
               <div className="absolute top-4 right-4">
-                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 bg-white/90 backdrop-blur-sm shadow-sm ${STATUS_BADGE[event.status]?.replace('border-2', 'border') || 'text-gray-500'}`}>
+                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 bg-white/90 backdrop-blur-sm ${STATUS_BADGE[event.status]?.replace('border-2', 'border') || 'text-gray-500'}`}>
                   {event.status === 'pending_approval' ? 'Pending' : event.status}
                 </span>
               </div>

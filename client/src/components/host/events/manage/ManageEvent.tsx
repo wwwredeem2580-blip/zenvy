@@ -8,7 +8,7 @@ import {
   Calendar, MapPin, ArrowRight, Search, Filter,
   Download, Plus, X, Clock, Trash2, AlertTriangle,
   Mail, Tag, Link as LinkIcon, ArrowLeft, Loader2,
-  Scan, Copy, Upload,
+  Scan, Copy, Upload, Pencil, Camera, Eye, Sparkles, BarChart3, Pause, Play,
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { hostAnalyticsService, HostEventDetailsResponse } from '@/lib/api/host-analytics';
@@ -16,6 +16,8 @@ import { hostEventsService } from '@/lib/api/host';
 import { scannerService } from '@/lib/api/scanner';
 import { eventsService } from '@/lib/api/events';
 import { useNotification } from '@/lib/context/notification';
+import { BDTIcon } from '@/components/ui/Icons';
+import { cleanText } from '@/lib/utils';
 
 /* ─── Shared UI ─── */
 const SidebarItem = ({ icon: Icon, label, isActive, onClick }: any) => (
@@ -45,94 +47,156 @@ const QuickActionButton = ({ icon: Icon, label, onClick }: any) => (
 );
 
 /* ─── Tabs ─── */
-const OverviewTab = ({ setActiveTab, data }: { setActiveTab: (t: string) => void; data: HostEventDetailsResponse | null }) => {
+const QuickActions = ({ ev, onRefetch }: { ev: any; onRefetch: () => Promise<void> }) => {
+  const { showNotification } = useNotification();
+  const [loading, setLoading] = useState(false);
+
+  const handleToggleSales = async () => {
+    if (!ev?._id) return;
+    try {
+      setLoading(true);
+      const res = await eventsService.toggleSalesPause(ev._id);
+      showNotification('success', 'Status Updated', res.message);
+      await onRefetch();
+    } catch (err: any) {
+      showNotification('error', 'Update Failed', err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const salesPaused = ev?.moderation?.sales?.paused ?? false;
+  const canToggleSales = ev?.status === 'published' || ev?.status === 'live';
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="bg-white border border-gray-200 p-6">
+        <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-wix-text-muted mb-6">Status & Sales</h3>
+        
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between p-3 bg-gray-50 border border-ink/10">
+            <span className="text-[11px] font-black uppercase tracking-wider text-wix-text-muted">Live Status</span>
+            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border-2 ${
+              ev?.status === 'live' ? 'border-emerald-500 text-emerald-600' :
+              ev?.status === 'published' ? 'border-wix-purple text-wix-purple' :
+              'border-ink text-ink'
+            }`}>
+              {ev?.status || 'Draft'}
+            </span>
+          </div>
+
+          <button
+            onClick={handleToggleSales}
+            disabled={!canToggleSales || loading}
+            className={`w-full py-4 text-[11px] font-black uppercase tracking-[0.2em] border-2 flex items-center justify-center gap-3 transition-all active:translate-y-0.5 ${
+              salesPaused 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-500 hover:bg-emerald-100' 
+                : 'bg-white text-ink border-ink hover:bg-ink hover:text-white'
+            } disabled:opacity-40`}
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : salesPaused ? <Play size={14} /> : <Pause size={14} />}
+            {salesPaused ? 'Resume Sales' : 'Pause Ticket Sales'}
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-ink p-6">
+        <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-white/50 mb-4">Immediate Tasks</h3>
+        <div className="flex flex-col gap-2">
+          <button className="flex items-center gap-3 w-full p-4 border border-white/10 text-white hover:bg-white/5 transition-all text-left">
+            <Megaphone className="w-4 h-4 text-white/40" />
+            <span className="text-[13px] font-bold">Email Attendees</span>
+          </button>
+          <button className="flex items-center gap-3 w-full p-4 border border-white/10 text-white hover:bg-white/5 transition-all text-left">
+            <Download className="w-4 h-4 text-white/40" />
+            <span className="text-[13px] font-bold">Download Recap</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ─── Tabs ─── */
+const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: (t: string) => void; data: HostEventDetailsResponse | null; onEdit: () => void; onRefetch: () => Promise<void> }) => {
   const ev = data?.event;
   const an = data?.analytics;
   const soldPct = an?.ticketsSoldPercentage ?? 0;
+  
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 max-w-[1280px] gap-8 animate-in fade-in duration-300">
       <div className="xl:col-span-2 flex flex-col gap-8">
-        <div className="bg-white border border-wix-border-light p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[18px] font-medium text-wix-text-dark">Event Overview</h2>
-            <button onClick={() => setActiveTab('Settings')} className="text-[13px] text-gray-500 hover:text-black font-medium transition-colors border-b border-transparent hover:border-black">Edit</button>
+        {/* Cover Image Spotlight */}
+        <div className="relative aspect-[21/9] bg-gray-100 border border-gray-200 overflow-hidden group">
+          <img 
+            src={ev?.media?.coverImage?.url || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30'} 
+            className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700" 
+            alt="Event Spotlight" 
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </div>
+
+        <div className="bg-white border border-gray-200 p-8">
+          <div className="flex flex-col sm:flex-row items-start gap-4 sm:items-center sm:justify-between mb-8 border-b border-gray-100 pb-4">
+            <h2 className="text-[14px] font-black uppercase tracking-[0.2em] text-wix-text-dark">Event Details</h2>
+            <button 
+              onClick={onEdit}
+              className="text-ink border-2 border-ink px-6 py-3 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-ink hover:text-white transition-all flex items-center gap-2"
+            >
+              <Pencil size={14} /> Edit Event
+            </button>
           </div>
-          <p className="text-[14px] text-wix-text-muted leading-relaxed mb-6">{ev?.tagline || ev?.description || 'No description provided.'}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 text-[14px]">
+          <div className="mb-8">
+             <div className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted mb-2">Tagline:</div>
+             <p className="text-[18px] font-bold text-ink leading-tight mb-6">{ev?.tagline ? cleanText(ev.tagline) : 'No tagline set for this event yet.'}</p>
+             <div className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted mb-2">Description:</div>
+             <p className="text-[14px] text-wix-text-muted leading-relaxed whitespace-pre-line">{ev?.description ? cleanText(ev.description) : 'No detailed description provided.'}</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 pt-6 border-t border-ink/5">
             <div>
-              <div className="text-[12px] uppercase tracking-wider text-gray-400 font-semibold mb-1">Schedule</div>
-              <div className="font-medium text-wix-text-dark">
+              <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Operational Date</div>
+              <div className="text-[14px] font-bold text-ink flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5" />
                 {ev?.schedule?.startDate ? new Date(ev.schedule.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                {ev?.schedule?.doors && <><br />{ev.schedule.doors}</>}
               </div>
             </div>
             <div>
-              <div className="text-[12px] uppercase tracking-wider text-gray-400 font-semibold mb-1">Location</div>
-              <div className="font-medium text-wix-text-dark">
-                {ev?.venue?.name || '—'}{ev?.venue?.address?.city && <><br />{ev.venue.address.city}, {ev.venue.address.country}</>}
+              <div className="text-[10px] uppercase font-black tracking-widest text-gray-400 mb-1">Venue & HQ</div>
+              <div className="text-[14px] font-bold text-ink flex items-center gap-2">
+                <MapPin className="w-3.5 h-3.5" />
+                {ev?.venue?.name || '—'}
               </div>
-            </div>
-            <div>
-              <div className="text-[12px] uppercase tracking-wider text-gray-400 font-semibold mb-1">Organizer</div>
-              <div className="font-medium text-wix-text-dark">{ev?.organizer?.companyName || '—'}</div>
-            </div>
-            <div>
-              <div className="text-[12px] uppercase tracking-wider text-gray-400 font-semibold mb-1">Category</div>
-              <div className="font-medium text-wix-text-dark capitalize">{ev?.category || '—'}</div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white border border-wix-border-light p-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-[18px] font-medium text-wix-text-dark">Ticket Sales Overview</h2>
-            <button onClick={() => setActiveTab('Tickets')} className="text-[13px] text-black hover:text-gray-500 font-medium transition-colors border-b border-black hover:border-gray-500 pb-0.5">View Details</button>
+        <div className="bg-white border border-gray-200 p-8">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-[14px] font-black uppercase tracking-[0.2em] text-wix-text-dark">Live Performance Metrics</h2>
+            <button onClick={() => setActiveTab('Tickets')} className="bg-ink text-white px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-wix-purple transition-all">Deep Analytics</button>
           </div>
-          <div className="flex justify-between items-end mb-3">
-            <div>
-              <div className="text-[32px] font-medium tracking-tight leading-none text-wix-text-dark">{an?.totalTicketsSold ?? 0}</div>
-              <div className="text-[13px] text-gray-500 font-medium mt-1">Tickets Sold / {an?.capacity ?? 0} Capacity</div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Net Sales</span>
+              <div className="text-[44px] font-bold tracking-tighter leading-none text-ink">{an?.totalTicketsSold ?? 0}<span className="text-[18px] text-gray-300 font-medium ml-2">/ {an?.capacity ?? 0}</span></div>
             </div>
-            <div className="text-right">
-              <div className="text-[20px] font-mono font-medium text-wix-text-dark">{an?.totalRevenue?.toLocaleString() ?? 0}</div>
-              <div className="text-[13px] text-green-600 font-medium mt-1">Revenue (BDT)</div>
+            <div className="text-left sm:text-right border-l-2 sm:border-l-0 sm:border-r border-gray-100 pl-4 sm:pl-0 sm:pr-4 flex flex-col gap-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Generated Revenue</span>
+              <div className="text-[28px] font-mono font-bold text-ink flex items-center sm:justify-end gap-1">
+                <BDTIcon className="text-[18px]" />{an?.totalRevenue?.toLocaleString() ?? 0}
+              </div>
             </div>
           </div>
-          <div className="w-full h-2 bg-gray-100 border border-wix-border-light overflow-hidden mb-3">
-            <div className="h-full bg-black transition-all duration-500" style={{ width: `${soldPct}%` }} />
+          <div className="w-full h-4 bg-gray-100 border border-gray-200 overflow-hidden mb-2">
+            <div className="h-full bg-ink transition-all duration-700" style={{ width: `${soldPct}%` }} />
           </div>
-          <div className="flex justify-between text-[12px] text-gray-400 font-medium">
-            <span>0</span><span>{soldPct}% Filled</span><span>{an?.capacity ?? 0}</span>
+          <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400">
+            <span>Entry Level</span><span>{soldPct}% Efficiency</span><span>Full Capacity</span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-8">
-        <div className="flex flex-col gap-3">
-          <h2 className="text-[12px] uppercase tracking-wider text-gray-400 font-semibold mb-1">Quick Actions</h2>
-          <QuickActionButton icon={CheckCircle} label="Check-in Attendees" onClick={() => setActiveTab('Checkin')} />
-          <QuickActionButton icon={Ticket} label="Manage Tickets" onClick={() => setActiveTab('Tickets')} />
-          <QuickActionButton icon={ImageIcon} label="Upload Gallery Photos" onClick={() => setActiveTab('Gallery')} />
-        </div>
-        <div className="bg-white border border-wix-border-light p-6">
-          <h2 className="text-[18px] font-medium text-wix-text-dark mb-6">Recent Activity</h2>
-          <div className="flex flex-col">
-            {an?.salesTrend?.slice(-2).map((s, i) => (
-              <div key={i} className="flex gap-4 py-4 border-b border-wix-border-light last:border-0">
-                <div className="w-8 h-8 bg-black text-white flex items-center justify-center flex-shrink-0 text-[12px] font-bold">
-                  {String(new Date(s.date).getDate()).padStart(2, '0')}
-                </div>
-                <div className="flex flex-col gap-1">
-                  <div className="text-[14px] text-wix-text-dark"><span className="font-semibold">{s.orders} orders</span> · {s.revenue.toLocaleString()} BDT</div>
-                  <div className="text-[11px] text-gray-400 font-medium">{new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                </div>
-              </div>
-            )) ?? (
-              <p className="text-[13px] text-wix-text-muted">No recent activity</p>
-            )}
-          </div>
-        </div>
-      </div>
+      <QuickActions ev={ev} onRefetch={onRefetch} />
     </div>
   );
 };
@@ -584,7 +648,7 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
               {manualLoading && <Loader2 className="w-4 h-4 animate-spin absolute right-3 top-2.5 text-gray-400" />}
 
               {showManualDropdown && manualResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-black shadow-lg z-50 max-h-[280px] overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-black z-50 max-h-[280px] overflow-y-auto">
                   {manualResults.map((t: any) => (
                     <button
                       key={t.ticketId}
@@ -613,7 +677,7 @@ const CheckinTab = ({ data }: { data: HostEventDetailsResponse | null }) => {
               )}
 
               {showManualDropdown && manualResults.length === 0 && manualQuery.length >= 2 && !manualLoading && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-wix-border-light shadow-sm p-4 z-50 text-center text-[13px] text-gray-500">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-wix-border-light p-4 z-50 text-center text-[13px] text-gray-500">
                   No tickets found matching &quot;{manualQuery}&quot;
                 </div>
               )}
@@ -1113,7 +1177,7 @@ const MarketingTab = () => {
   );
 };
 
-const RestrictedTimePicker = ({ originalTime, label }: { originalTime: string; label: string }) => {
+const RestrictedTimePicker = ({ originalTime, label, value, onChange }: { originalTime: string; label: string; value?: string; onChange?: (v: string) => void }) => {
   const options = useMemo(() => {
     const [h] = originalTime.split(':').map(Number);
     const opts: { value: string; label: string }[] = [];
@@ -1136,7 +1200,7 @@ const RestrictedTimePicker = ({ originalTime, label }: { originalTime: string; l
       </label>
       <div className="relative">
         <Clock className="w-4 h-4 absolute left-3 top-2.5 text-gray-400 pointer-events-none" />
-        <select value={val} onChange={e => setVal(e.target.value)} className="w-full border border-wix-border-light pl-9 pr-4 py-2 text-[14px] outline-none focus:border-black transition-colors appearance-none bg-white cursor-pointer">
+        <select value={value || val} onChange={e => { setVal(e.target.value); onChange?.(e.target.value); }} className="w-full border border-gray-200 pl-9 pr-4 py-2 text-[14px] outline-none focus:border-black transition-colors appearance-none bg-white cursor-pointer">
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
@@ -1144,282 +1208,268 @@ const RestrictedTimePicker = ({ originalTime, label }: { originalTime: string; l
   );
 };
 
-const SettingsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void; onRefetch: () => Promise<void> }) => {
+/* ─── Consolidated Edit Modal ─── */
+const EditDetailsModal = ({ isOpen, onClose, data, onRefetch }: { isOpen: boolean; onClose: () => void; data: HostEventDetailsResponse | null; onRefetch: () => Promise<void> }) => {
   const ev = data?.event;
-  const router = useRouter();
   const { showNotification } = useNotification();
-
-  // ─── Controlled form state ───
-  const [description, setDescription] = useState(ev?.description || '');
   const [tagline, setTagline] = useState(ev?.tagline || '');
-  const [savingDetails, setSavingDetails] = useState(false);
-
-  // ─── Sales pause state ───
-  const salesPaused = ev?.moderation?.sales?.paused ?? false;
-  const [isTogglingPause, setIsTogglingPause] = useState(false);
-  const canToggleSales = ev?.status === 'published' || ev?.status === 'live';
-
-  // ─── Schedule state (approved-only) ───
+  const [description, setDescription] = useState(ev?.description || '');
+  const [coverUrl, setCoverUrl] = useState(ev?.media?.coverImage?.url || '');
+  const [gallery, setGallery] = useState<any[]>(ev?.media?.gallery ?? []);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState<'cover' | 'gallery' | null>(null);
+  
+  // ─── Schedule state ───
   const isApproved = ev?.status === 'approved';
   const scheduleModified = ev?.schedule?.scheduleModified ?? false;
   const canEditSchedule = isApproved && !scheduleModified;
   const [startDate, setStartDate] = useState(ev?.schedule?.startDate?.slice(0, 10) || '');
   const [endDate, setEndDate] = useState(ev?.schedule?.endDate?.slice(0, 10) || '');
-  const originalStartTime = ev?.schedule?.startDate
-    ? new Date(ev.schedule.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-    : '09:00';
-  const originalEndTime = ev?.schedule?.endDate
-    ? new Date(ev.schedule.endDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-    : '18:00';
-  const [savingSchedule, setSavingSchedule] = useState(false);
+  const originalStartTime = ev?.schedule?.startDate ? new Date(ev.schedule.startDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '09:00';
+  const originalEndTime = ev?.schedule?.endDate ? new Date(ev.schedule.endDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '18:00';
+  const [startTime, setStartTime] = useState(originalStartTime);
+  const [endTime, setEndTime] = useState(originalEndTime);
 
-  // ─── Delete state ───
-  const [deleting, setDeleting] = useState(false);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
-  // Sync state when data loads
   useEffect(() => {
     if (ev) {
-      setDescription(ev.description || '');
       setTagline(ev.tagline || '');
+      setDescription(ev.description || '');
+      setCoverUrl(ev.media?.coverImage?.url || '');
+      setGallery(ev.media?.gallery ?? []);
       setStartDate(ev.schedule?.startDate?.slice(0, 10) || '');
       setEndDate(ev.schedule?.endDate?.slice(0, 10) || '');
     }
-  }, [ev?._id]);
+  }, [ev?._id, isOpen]);
 
-  // ─── Handlers ───
-  const handleSaveDetails = async () => {
-    if (!ev) return;
-    setSavingDetails(true);
+  const handleUpload = async (file: File, type: 'cover' | 'gallery') => {
+    setUploading(type);
     try {
-      const result = await eventsService.updateEventByStatus(ev._id, ev.status, { description, tagline });
-      showNotification('success', 'Details Saved', result.message || 'Event details updated successfully.');
-      onUpdate({ ...data!, event: { ...ev, description, tagline } });
+      const { mediaService } = await import('@/lib/api/media');
+      const ImageKit = (await import('imagekit-javascript')).default;
+      const auth = await mediaService.getImageKitAuth();
+      const imagekit = new ImageKit({ publicKey: auth.publicKey, urlEndpoint: auth.urlEndpoint });
+      
+      const res: any = await new Promise((resolve, reject) => {
+        imagekit.upload({
+          file,
+          fileName: `event_${type}_${Date.now()}_${file.name}`,
+          folder: type === 'cover' ? '/zenvy/event_covers' : '/zenvy/event_gallery',
+          useUniqueFileName: true,
+          signature: auth.signature,
+          expire: auth.expire,
+          token: auth.token,
+        }, (err, result) => err ? reject(err) : resolve(result));
+      });
+
+      if (type === 'cover') {
+        setCoverUrl(res.url);
+      } else {
+        setGallery(prev => [...prev, { url: res.url, caption: '', order: prev.length + 1 }]);
+      }
+      showNotification('success', 'Uploaded', `${type === 'cover' ? 'Cover image' : 'Photo'} updated.`);
     } catch (err: any) {
-      showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed to save details.');
+      showNotification('error', 'Upload Failed', err.message);
     } finally {
-      setSavingDetails(false);
+      setUploading(null);
     }
   };
 
-  const handleToggleSalesPause = async () => {
+  const handleSave = async () => {
     if (!ev?._id) return;
-    setIsTogglingPause(true);
+
+    if (canEditSchedule) {
+      const origStart = new Date(ev.schedule!.startDate);
+      const origEnd = new Date(ev.schedule!.endDate);
+      const newStart = new Date(`${startDate}T${startTime}`);
+      const newEnd = new Date(`${endDate}T${endTime}`);
+      const TWO_HOURS = 2 * 60 * 60 * 1000;
+      if (Math.abs(newStart.getTime() - origStart.getTime()) > TWO_HOURS || Math.abs(newEnd.getTime() - origEnd.getTime()) > TWO_HOURS) {
+        showNotification('error', 'Invalid Change', 'Schedule can only be modified by ±2 hours from the original time.');
+        return;
+      }
+      if (!window.confirm('⚠️ Schedule change can only be done ONCE. All attendees will be notified. Confirm?')) return;
+    }
+
     try {
-      const result = await eventsService.toggleSalesPause(ev._id);
-      showNotification('success', 'Sales Updated', result.message);
+      setSaving(true);
+      const updateData: any = {
+        tagline,
+        description,
+        media: {
+          ...ev.media,
+          coverImage: { url: coverUrl },
+          gallery
+        }
+      };
+
+      if (canEditSchedule) {
+        updateData.schedule = { 
+          ...ev.schedule, 
+          startDate: new Date(`${startDate}T${startTime}`).toISOString(), 
+          endDate: new Date(`${endDate}T${endTime}`).toISOString(), 
+          scheduleModified: true 
+        };
+      }
+
+      await eventsService.updateEventByStatus(ev._id, ev.status, updateData);
+      showNotification('success', 'Changes Saved', 'Event details have been perfectly synchronized.');
       await onRefetch();
+      onClose();
     } catch (err: any) {
-      showNotification('error', 'Update Failed', err?.response?.data?.message || err?.message || 'Failed to update sales status.');
+      showNotification('error', 'Save Failed', err.message);
     } finally {
-      setIsTogglingPause(false);
+      setSaving(false);
     }
   };
 
-  const handleSaveSchedule = async () => {
-    if (!ev || !canEditSchedule) return;
-    // Validate ±2h
-    const origStart = new Date(ev.schedule!.startDate);
-    const origEnd = new Date(ev.schedule!.endDate);
-    const newStart = new Date(`${startDate}T${originalStartTime}`);
-    const newEnd = new Date(`${endDate}T${originalEndTime}`);
-    const TWO_HOURS = 2 * 60 * 60 * 1000;
-    if (Math.abs(newStart.getTime() - origStart.getTime()) > TWO_HOURS || Math.abs(newEnd.getTime() - origEnd.getTime()) > TWO_HOURS) {
-      showNotification('error', 'Invalid Change', 'Schedule can only be modified by ±2 hours from the original time.');
-      return;
-    }
-    if (!window.confirm('⚠️ This can only be done ONCE. All attendees will be notified. Confirm schedule change?')) return;
-    setSavingSchedule(true);
-    try {
-      const updatedSchedule = { ...ev.schedule, startDate: newStart.toISOString(), endDate: newEnd.toISOString(), scheduleModified: true };
-      const result = await eventsService.updateEventByStatus(ev._id, ev.status, { schedule: updatedSchedule });
-      showNotification('success', 'Schedule Updated', result.message || 'Event schedule has been updated.');
-      onUpdate({ ...data!, event: { ...ev, schedule: updatedSchedule } });
-    } catch (err: any) {
-      showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed to update schedule.');
-    } finally {
-      setSavingSchedule(false);
-    }
-  };
-
-  const handleDeleteEvent = async () => {
-    if (!ev) return;
-    if (ev.status !== 'draft' && !window.confirm(`⚠️ This event has status "${ev.status}". Deleting is permanent and cannot be undone. All ticket sales will stop immediately. Are you absolutely sure?`)) return;
-    if (ev.status === 'draft' && !window.confirm('Delete this draft event? This cannot be undone.')) return;
-    setDeleting(true);
-    try {
-      await eventsService.deleteEvent(ev._id);
-      showNotification('success', 'Event Deleted', 'Event has been permanently deleted.');
-      router.push('/host/events');
-    } catch (err: any) {
-      showNotification('error', 'Delete Failed', err?.response?.data?.message || err?.message || 'Failed to delete event.');
-      setDeleting(false);
-    }
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-300 max-w-[1080px] pb-10">
-      <div>
-        <h2 className="text-[20px] font-medium text-wix-text-dark">Event Settings</h2>
-        <p className="text-[13px] text-gray-500 mt-1">Manage configuration, scheduling, visibility, and sales rules.</p>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 flex flex-col gap-8">
+    <div className="fixed inset-0 z-[6000] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink/60 backdrop-blur-sm animate-in fade-in" onClick={onClose} />
+      <div className="relative bg-white border border-gray-200 w-full max-w-[900px] max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+        {/* Header */}
+        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+          <div>
+            <h2 className="text-[20px] font-black uppercase tracking-[0.2em] text-ink">Edit Event Spotlight</h2>
+            <p className="text-[12px] text-wix-text-muted mt-1 uppercase tracking-widest font-bold">Synchronize covers, descriptions & narratives</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-ink hover:text-white transition-all"><X size={24} /></button>
+        </div>
 
-          {/* ─── Event Details ─── */}
-          <div className="bg-white border border-wix-border-light p-8 flex flex-col gap-6">
-            <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold border-b border-wix-border-light pb-3">Event Details</h3>
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Event Description</label>
-              <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} className="w-full border border-wix-border-light p-4 text-[14px] focus:border-black outline-none transition-colors resize-y leading-relaxed" />
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-10 flex flex-col gap-10">
+          {/* Cover Management */}
+          <div className="flex flex-col gap-4">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-wix-text-muted">Part 1: Visual Identity</h3>
+            <div className="relative aspect-[21/9] bg-gray-50 border-2 border-dashed border-ink/20 group overflow-hidden">
+               {coverUrl ? (
+                 <>
+                   <img src={coverUrl} className="w-full h-full object-cover" alt="Cover" />
+                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                      <button onClick={() => coverInputRef.current?.click()} className="bg-white text-ink px-6 py-2.5 text-[11px] font-black uppercase tracking-widest flex items-center gap-2">
+                        <Camera size={14} /> Change
+                      </button>
+                      <button onClick={() => setCoverUrl('')} className="bg-red-500 text-white px-6 py-2.5 text-[11px] font-black uppercase tracking-widest">Remove</button>
+                   </div>
+                 </>
+               ) : (
+                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-ink/20 group-hover:text-ink transition-colors cursor-pointer" onClick={() => coverInputRef.current?.click()}>
+                    <Camera size={48} />
+                    <span className="text-[12px] font-black uppercase tracking-[0.2em]">Upload Cover (21:9 Recommended)</span>
+                 </div>
+               )}
+               {uploading === 'cover' && <div className="absolute inset-0 bg-white/80 flex items-center justify-center gap-3"><Loader2 className="w-6 h-6 animate-spin" /><span className="text-[12px] font-black uppercase">Propagating...</span></div>}
+               <input ref={coverInputRef} type="file" className="hidden" accept="image/*" onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0], 'cover')} />
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Event Tagline</label>
-              <input type="text" value={tagline} onChange={e => setTagline(e.target.value)} className="w-full border border-wix-border-light p-3 text-[14px] focus:border-black outline-none transition-colors" />
-            </div>
-            <button
-              onClick={handleSaveDetails}
-              disabled={savingDetails}
-              className="self-end flex items-center gap-2 bg-black text-white px-6 py-2.5 text-[13px] font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
-            >
-              {savingDetails ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {savingDetails ? 'Saving...' : 'Save Details'}
-            </button>
           </div>
 
-          {/* ─── Event Schedule (approved only) ─── */}
-          <div className="bg-white border border-wix-border-light p-8 flex flex-col gap-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-1 h-full bg-black" />
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold">Event Schedule</h3>
-                <p className="text-[12px] text-gray-500 mt-1">
-                  {isApproved
-                    ? scheduleModified
-                      ? 'Schedule was already modified — no further changes allowed.'
-                      : 'One-time edit allowed. Time edits restricted to ±2h from permit time.'
-                    : 'Schedule editing is only available for approved events.'}
-                </p>
-              </div>
-              {isApproved && !scheduleModified && (
-                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1">One-Time Edit</span>
-              )}
-              {scheduleModified && (
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 bg-gray-50 border border-gray-200 px-2 py-1">Already Modified</span>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {/* Tagline */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[11px] font-black uppercase tracking-[0.2em] text-wix-text-muted">Tagline</label>
+              <input 
+                type="text" 
+                value={tagline}
+                onChange={e => setTagline(e.target.value)}
+                placeholder="The hook that catches attention..." 
+                className="w-full border border-gray-200 p-4 text-[15px] font-bold outline-none focus:bg-gray-50 transition-colors"
+              />
             </div>
+            {/* Description */}
+            <div className="flex flex-col gap-3">
+              <label className="text-[11px] font-black uppercase tracking-[0.2em] text-wix-text-muted">Description</label>
+              <textarea 
+                rows={4}
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="The full story of the event..." 
+                className="w-full border border-gray-200 p-4 text-[14px] outline-none focus:bg-gray-50 transition-colors resize-none"
+              />
+            </div>
+          </div>
 
-            {!isApproved ? (
-              <div className="flex items-center gap-2 text-[13px] text-gray-400 border border-dashed border-wix-border-light p-4">
-                <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
-                Schedule editing is only available once your event is approved.
+          {/* Schedule (Conditional) */}
+          {isApproved && (
+            <div className="flex flex-col gap-4 border-t border-gray-100 pt-8">
+              <div className="flex justify-between items-center">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-wix-text-muted">Part 2: Event Schedule</h3>
+                {scheduleModified && <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600 bg-amber-50 px-2 py-1">Already Modified</span>}
               </div>
-            ) : (
-              <div className={`flex flex-col gap-6 ${!canEditSchedule ? 'opacity-40 pointer-events-none' : ''}`}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={`p-6 bg-gray-50 border border-gray-200 ${!canEditSchedule ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div className="flex flex-col gap-2">
-                    <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">Start Date</label>
-                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border border-wix-border-light p-2.5 text-[14px] focus:border-black outline-none transition-colors font-mono" />
+                    <label className="text-[11px] font-black uppercase tracking-widest text-wix-text-muted">Start Date</label>
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border border-gray-200 p-2.5 text-[14px] focus:border-black outline-none transition-colors font-mono" />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[12px] uppercase tracking-wider text-gray-600 font-semibold">End Date</label>
-                    <input type="date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} className="border border-wix-border-light p-2.5 text-[14px] focus:border-black outline-none transition-colors font-mono" />
+                    <label className="text-[11px] font-black uppercase tracking-widest text-wix-text-muted">End Date</label>
+                    <input type="date" value={endDate} min={startDate} onChange={e => setEndDate(e.target.value)} className="border border-gray-200 p-2.5 text-[14px] focus:border-black outline-none transition-colors font-mono" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <RestrictedTimePicker label="Daily Start Time" originalTime={originalStartTime} />
-                  <RestrictedTimePicker label="Daily End Time" originalTime={originalEndTime} />
+                  <RestrictedTimePicker label="Start Time" originalTime={originalStartTime} value={startTime} onChange={setStartTime} />
+                  <RestrictedTimePicker label="End Time" originalTime={originalEndTime} value={endTime} onChange={setEndTime} />
                 </div>
-                {canEditSchedule && (
-                  <button
-                    onClick={handleSaveSchedule}
-                    disabled={savingSchedule}
-                    className="self-end flex items-center gap-2 bg-black text-white px-6 py-2.5 text-[13px] font-semibold hover:bg-gray-800 transition-colors disabled:opacity-50"
-                  >
-                    {savingSchedule ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                    {savingSchedule ? 'Saving...' : 'Save Schedule'}
-                  </button>
-                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Gallery Snapshot */}
+          {/* <div className="flex flex-col gap-4">
+             <div className="flex justify-between items-center">
+               <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-wix-text-muted">{isApproved ? 'Part 3' : 'Part 2'}: Gallery Archive</h3>
+               <button onClick={() => galleryInputRef.current?.click()} className="text-[11px] font-black uppercase tracking-widest text-wix-purple hover:underline flex items-center gap-1">
+                 <Plus size={14} /> Add Media
+               </button>
+             </div>
+             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                {gallery.map((img, i) => (
+                  <div key={i} className="relative w-32 h-32 shrink-0 border border-gray-200 group overflow-hidden">
+                    <img src={img.url} className="w-full h-full object-cover" alt="" />
+                    <button 
+                      onClick={() => setGallery(prev => prev.filter((_, idx) => idx !== i))}
+                      className="absolute inset-0 bg-red-600/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                    >
+                      <Trash2 size={24} />
+                    </button>
+                  </div>
+                ))}
+                <div 
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="w-32 h-32 bg-gray-50 border-2 border-dashed border-ink/20 flex flex-col items-center justify-center text-ink/20 hover:text-ink hover:border-ink transition-all cursor-pointer"
+                >
+                  {uploading === 'gallery' ? <Loader2 size={24} className="animate-spin" /> : <Upload size={24} />}
+                </div>
+                <input ref={galleryInputRef} type="file" className="hidden" accept="image/*" onChange={e => {
+                  if (e.target.files?.[0]) handleUpload(e.target.files[0], 'gallery');
+                  e.target.value = '';
+                }} />
+             </div>
+          </div> */}
         </div>
 
-        {/* ─── Right Sidebar ─── */}
-        <div className="flex flex-col gap-6">
-          <div className="bg-white border border-wix-border-light p-6 flex flex-col gap-6">
-            <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold border-b border-wix-border-light pb-3">Status Controls</h3>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-[14px] text-wix-text-dark">Ticket Sales</div>
-                <div className="text-[12px] text-gray-500 mt-1">
-                  {!canToggleSales ? `Not available (${ev?.status || 'draft'})` : salesPaused ? 'Currently paused' : 'Currently active'}
-                </div>
-              </div>
-              <button
-                onClick={handleToggleSalesPause}
-                disabled={!canToggleSales || isTogglingPause}
-                className={`px-3 py-1.5 text-[12px] font-semibold border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
-                  salesPaused ? 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100' : 'bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100'
-                }`}
-              >
-                {isTogglingPause ? <Loader2 className="w-3.5 h-3.5 animate-spin inline" /> : salesPaused ? 'Resume Sales' : 'Pause Sales'}
-              </button>
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-[14px] text-wix-text-dark">Event Status</div>
-                <div className="text-[12px] text-gray-500 mt-1 capitalize">{ev?.status || 'Unknown'}</div>
-              </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest px-2 py-1 border ${
-                ev?.status === 'live' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                ev?.status === 'published' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                ev?.status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                ev?.status === 'pending_approval' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                'bg-gray-100 text-gray-500 border-gray-300'
-              }`}>{ev?.status || 'unknown'}</span>
-            </div>
-          </div>
-
-          <div className="bg-white border border-wix-border-light p-6 flex flex-col gap-4">
-            <h3 className="text-[14px] uppercase tracking-wider text-gray-800 font-semibold border-b border-wix-border-light pb-3">Financials</h3>
-            <div className="flex justify-between text-[13px]">
-              <span className="text-gray-500">Currency</span>
-              <span className="font-semibold text-wix-text-dark">{ev?.tickets?.[0]?.price?.currency || 'BDT'}</span>
-            </div>
-            <div className="flex justify-between text-[13px]">
-              <span className="text-gray-500">Min. Price</span>
-              <span className="font-semibold text-wix-text-dark">
-                {ev?.tickets && ev.tickets.length > 0
-                  ? Math.min(...ev.tickets.map(t => t.price?.amount ?? 0)).toLocaleString()
-                  : '—'}
-              </span>
-            </div>
-            <div className="flex justify-between text-[13px]">
-              <span className="text-gray-500">Tickets Active</span>
-              <span className="font-semibold text-wix-text-dark">{ev?.tickets?.filter(t => t.isActive).length ?? 0} / {ev?.tickets?.length ?? 0}</span>
-            </div>
-          </div>
-
-          <div className="border border-red-300 bg-red-50 p-6 flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="w-5 h-5" />
-              <h3 className="text-[15px] font-semibold">Danger Zone</h3>
-            </div>
-            <p className="text-[12px] text-gray-700 leading-relaxed">Deleting an event is permanent and cannot be undone. All ticket sales will be stopped immediately.</p>
-            <button
-              onClick={handleDeleteEvent}
-              disabled={deleting}
-              className="bg-white text-red-600 border border-red-600 px-6 py-2.5 text-[13px] font-bold uppercase tracking-widest hover:bg-red-600 hover:text-white transition-colors w-full text-center flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {deleting ? 'Deleting...' : 'Delete Event'}
-            </button>
-          </div>
+        {/* Footer */}
+        <div className="p-8 border-t border-gray-100 bg-gray-50 flex gap-4 justify-end">
+           <button onClick={onClose} className="px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] border border-gray-200 hover:bg-white transition-all">Cancel</button>
+           <button 
+             onClick={handleSave}
+             disabled={saving}
+             className="px-8 py-4 text-[11px] font-black uppercase tracking-[0.2em] bg-ink text-white border border-gray-200 hover:bg-black transition-all flex items-center gap-2"
+           >
+             {saving && <Loader2 size={14} className="animate-spin" />}
+             Commit Changes
+           </button>
         </div>
       </div>
     </div>
   );
 };
+
+/* ─── Tickets Tab ─── */
 
 
 /* ─── Mobile Tab Strip ─── */
@@ -1446,10 +1496,8 @@ export default function ManageEvent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState('Overview');
-  const [sidePanelOpen, setSidePanelOpen] = useState(false); // kept for legacy ref
+  const [showEditModal, setShowEditModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  // sidePanelOpen is now managed inside TicketsTab itself
-  void sidePanelOpen; void setSidePanelOpen;
 
   const router = useRouter();
   const { id } = useParams();
@@ -1547,7 +1595,6 @@ export default function ManageEvent() {
               <span>/</span>
               <span onClick={() => router.push('/host/events')} className="hover:text-wix-text-dark cursor-pointer transition-colors">Events</span>
               <span>/</span>
-              <span className="text-wix-text-dark">{loading ? '...' : (ev?.title || 'Event')}</span>
             </div>
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
               <div className="min-w-0">
@@ -1591,7 +1638,7 @@ export default function ManageEvent() {
               </div>
             ) : (
               <div key={activeKey}>
-                {activeKey === 'Overview' && <OverviewTab setActiveTab={setActiveKey} data={data} />}
+                {activeKey === 'Overview' && <OverviewTab setActiveTab={setActiveKey} data={data} onEdit={() => setShowEditModal(true)} onRefetch={fetchEventData} />}
                 {activeKey === 'Attendees' && <AttendeesTab data={data} />}
                 {activeKey === 'Checkin' && <CheckinTab data={data} />}
                 {activeKey === 'Tickets' && <TicketsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
@@ -1604,7 +1651,12 @@ export default function ManageEvent() {
         </main>
       </div>
 
-
+      <EditDetailsModal 
+        isOpen={showEditModal} 
+        onClose={() => setShowEditModal(false)} 
+        data={data} 
+        onRefetch={fetchEventData} 
+      />
     </div>
   );
 }
