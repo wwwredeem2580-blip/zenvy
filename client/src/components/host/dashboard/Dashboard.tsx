@@ -18,7 +18,8 @@ import {
   Wallet as WalletIcon, Users as UsersIcon,
   LayoutDashboard, Home, LogIn, UserPlus,
   TrendingUp, TrendingDown,
-  ChevronRight as ChevronRightIcon
+  ChevronRight as ChevronRightIcon,
+  BarChart3, Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/lib/context/auth';
 import { authService } from '@/lib/api/auth';
@@ -181,94 +182,132 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 /* ─── Event Performance Table ─── */
-const EventTable = ({ events, loading, router, onDelete }: { events: any[]; loading: boolean; router: any; onDelete: (eventId: string) => void }) => (
-  <div className="w-full overflow-x-auto">
-    <table className="w-full text-left border-collapse min-w-[700px]">
-      <thead>
-        <tr className="border-b-2 border-wix-text-dark text-[11px] uppercase tracking-wider text-wix-text-muted">
-          <th className="pb-4 pl-3 font-black w-2/5">Event</th>
-          <th className="pb-4 font-black">Capacity &amp; Sales</th>
-          <th className="pb-4 font-black">Revenue</th>
-          <th className="pb-4 font-black">Status</th>
-          <th className="pb-4 pr-3 font-black text-right">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {loading ? (
-          <tr><td colSpan={5} className="py-12 text-center"><Loader2 className="w-5 h-5 animate-spin mx-auto text-wix-purple" /></td></tr>
-        ) : events.length === 0 ? (
-          <tr><td colSpan={5} className="py-12 text-center text-[14px] text-wix-text-muted">No events found</td></tr>
-        ) : (
-          events.map((event: any, i: number) => {
-            const sold = event.ticketsSoldPercentage ?? 0;
-            const isDraft = event.status === 'draft';
-            return (
-              <tr key={event.eventId || i} className="border-b border-wix-border-light hover:bg-gray-50 transition-colors group">
-                <td className="py-4 pl-3">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={event.coverImage || 'https://fastly.picsum.photos/id/1084/536/354.jpg?grayscale&hmac=Ux7nzg19e1q35mlUVZjhCLxqkR30cC-CarVg-nlIf60'}
-                      className="w-10 h-10 object-cover shrink-0 border border-wix-border-light"
-                      alt=""
-                    />
-                    <div>
-                      <span className="font-semibold text-[14px] text-wix-text-dark line-clamp-1 max-w-[180px] block">{event.title}</span>
-                      <span className="text-[11px] text-wix-text-muted">
-                        {new Date(event.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                    </div>
-                  </div>
-                </td>
-                <td className="py-4 pr-6">
-                  <div className="flex flex-col gap-1.5 max-w-[180px]">
-                    <div className="flex justify-between text-[12px]">
-                      <span className="font-medium">{sold}% filled</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100">
-                      <div className="h-full bg-wix-text-dark" style={{ width: `${sold}%` }} />
-                    </div>
-                  </div>
-                </td>
-                <td className="py-4">
-                  <span className="font-mono text-[14px] font-medium flex items-center gap-0.5">
-                    <BDTIcon className="text-[12px]" />{event.revenue?.toLocaleString()}
+const EventTable = ({ events, loading, router, onDelete }: { events: any[]; loading: boolean; router: any; onDelete: (eventId: string) => void }) => {
+  if (loading) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center gap-6">
+        <Loader2 className="w-10 h-10 animate-spin text-wix-purple" />
+        <span className="text-[11px] font-black uppercase tracking-[0.2em] text-wix-text-muted">Syncing your events...</span>
+      </div>
+    );
+  }
+
+  if (events.length === 0) {
+    return (
+      <div className="py-24 text-center border-2 border-ink bg-white flex flex-col items-center">
+        <div className="w-16 h-16 bg-gray-50 border-2 border-ink mb-6 flex items-center justify-center">
+          <Calendar className="text-ink/20" size={32} />
+        </div>
+        <h3 className="text-[18px] font-bold text-ink mb-2">No events found</h3>
+        <p className="text-[14px] text-wix-text-muted mb-8 max-w-xs mx-auto">It looks like you haven't created any events in this category yet.</p>
+        <button 
+          onClick={() => router.push('/host/events/create')}
+          className="bg-ink text-bg px-10 py-4 text-[11px] font-black uppercase tracking-[0.2em] hover:bg-black transition-all shadow-lg hover:shadow-xl active:scale-[0.98]"
+        >
+          Create New Event
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {events.map((event: any, i: number) => {
+        const sold = event.ticketsSoldPercentage ?? 0;
+        const isDraft = event.status === 'draft';
+        
+        return (
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.05 }}
+            key={event.eventId || i} 
+            onClick={() =>
+              isDraft
+                ? router.push(`/host/events/create?draftId=${event.eventId}`)
+                : router.push(`/host/events/manage/${event.eventId}`)
+            }
+            className="group bg-white flex flex-col shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+          >
+            {/* Card Header: Image + Status */}
+            <div className="relative aspect-[16/9] overflow-hidden bg-gray-100">
+              <img
+                src={event.coverImage || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30'}
+                className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-500"
+                alt=""
+              />
+              <div className="absolute top-4 right-4">
+                <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 bg-white/90 backdrop-blur-sm shadow-sm ${STATUS_BADGE[event.status]?.replace('border-2', 'border') || 'text-gray-500'}`}>
+                  {event.status === 'pending_approval' ? 'Pending' : event.status}
+                </span>
+              </div>
+            </div>
+
+            {/* Card Body */}
+            <div className="p-6 flex-1 flex flex-col">
+              <div className="mb-6 flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">{event.category || 'General'}</span>
+                  <div className="w-1 h-1 bg-ink/10 rounded-full" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted">
+                    {new Date(event.startDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                   </span>
-                </td>
-                <td className="py-4">
-                  <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 border ${STATUS_BADGE[event.status] || 'border-gray-300 text-gray-500'}`}>
-                    {event.status === 'pending_approval' ? 'pending' : event.status}
-                  </span>
-                </td>
-                <td className="py-4 pr-3 text-right">
-                  <div className="flex items-center justify-end gap-2 transition-opacity">
-                    {isDraft && (
-                      <button
-                        onClick={() => onDelete(event.eventId)}
-                        className="text-[12px] font-bold uppercase tracking-widest text-red-600 border border-red-300 px-3 py-1.5 hover:bg-red-600 hover:text-white hover:border-red-600 transition-colors"
-                      >
-                        Delete
-                      </button>
-                    )}
-                    <button
-                      onClick={() =>
-                        isDraft
-                          ? router.push(`/host/events/create?draftId=${event.eventId}`)
-                          : router.push(`/host/events/manage/${event.eventId}`)
-                      }
-                      className="text-[12px] font-bold uppercase tracking-widest text-wix-text-dark border border-wix-border-light px-3 py-1.5 hover:border-wix-text-dark transition-colors"
-                    >
-                      {isDraft ? 'Edit Draft' : 'Manage'}
-                    </button>
+                </div>
+                <h3 className="text-[20px] font-bold text-ink leading-tight tracking-tight line-clamp-2 transition-colors">
+                  {event.title}
+                </h3>
+              </div>
+
+              {/* Metrics Row */}
+              <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-6 mb-6">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-wix-text-muted">Capacity</span>
+                  <div className="flex items-center justify-between text-[11px] font-bold mb-1">
+                    <span>{sold}% Sold</span>
+                    <span className="text-ink/40 font-mono">{event.ticketsSold ?? 0}</span>
                   </div>
-                </td>
-              </tr>
-            );
-          })
-        )}
-      </tbody>
-    </table>
-  </div>
-);
+                  <div className="w-full h-1 bg-gray-50 overflow-hidden">
+                    <div className="h-full bg-ink" style={{ width: `${sold}%` }} />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5 pl-4 border-l border-gray-100">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-wix-text-muted">Revenue</span>
+                  <div className="flex items-center gap-1 h-[26px]">
+                    <BDTIcon className="text-[14px] text-ink" />
+                    <span className="text-[18px] font-bold font-mono text-ink">
+                      {event.revenue?.toLocaleString() || '0'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Footer */}
+              <div className="flex gap-2">
+                <div
+                  className="flex-1 bg-ink group-hover:bg-wix-purple text-bg text-[10px] font-black uppercase tracking-[0.2em] py-3.5 transition-all flex items-center justify-center gap-2"
+                >
+                  {isDraft ? <Sparkles size={14} /> : <BarChart3 size={14} />}
+                  {isDraft ? 'Resume' : 'Manage'}
+                </div>
+                {isDraft && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(event.eventId);
+                    }}
+                    className="aspect-square w-12 flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 transition-all z-10"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+};
 
 /* ─── Main Dashboard ─── */
 export const Dashboard: React.FC<DashboardProps> = ({ onLogout }) => {
