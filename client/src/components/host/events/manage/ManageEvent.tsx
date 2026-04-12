@@ -123,6 +123,10 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
   const an = data?.analytics;
   const soldPct = an?.ticketsSoldPercentage ?? 0;
   
+  const [descExpanded, setDescExpanded] = useState(false);
+  const descRef = useRef<HTMLDivElement>(null);
+  const [descOverflows, setDescOverflows] = useState(false);
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 max-w-[1280px] gap-8 animate-in fade-in duration-300">
       <div className="xl:col-span-2 flex flex-col gap-8">
@@ -134,6 +138,31 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
             alt="Event Spotlight" 
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </div>
+
+        <div className="bg-white border border-gray-200 p-8">
+          <div className="flex items-center justify-between mb-10">
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.2em] text-wix-text-dark">Performance Metrics</h2>
+            <button onClick={() => setActiveTab('Tickets')} className="bg-ink text-white px-5 py-2 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-wix-purple transition-all">Deep Analytics</button>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Net Sales</span>
+              <div className="text-[32px] font-bold tracking-tighter leading-none text-ink">{an?.totalTicketsSold ?? 0}<span className="text-[18px] text-gray-300 font-medium ml-2">/ {an?.capacity ?? 0}</span></div>
+            </div>
+            <div className="text-left sm:text-right border-l-2 sm:border-l-0 sm:border-r border-gray-100 pl-4 sm:pl-0 sm:pr-4 flex flex-col gap-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Generated Revenue</span>
+              <div className="text-[24px] font-mono font-bold text-ink flex items-center sm:justify-end gap-1">
+                <BDTIcon className="text-[16px]" />{an?.totalRevenue?.toLocaleString() ?? 0}
+              </div>
+            </div>
+          </div>
+          <div className="w-full h-4 bg-gray-100 border border-gray-200 overflow-hidden mb-2">
+            <div className="h-full bg-ink transition-all duration-700" style={{ width: `${soldPct}%` }} />
+          </div>
+          <div className="flex justify-between text-[9px] font-semibold uppercase tracking-widest text-gray-900">
+            <span>Entry Level</span><span>50% Efficiency</span><span>Full Capacity</span>
+          </div>
         </div>
 
         <div className="bg-white border border-gray-200 p-8">
@@ -150,7 +179,25 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
              <div className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted mb-2">Tagline:</div>
              <p className="text-[18px] font-bold text-ink leading-tight mb-6">{ev?.tagline ? cleanText(ev.tagline) : 'No tagline set for this event yet.'}</p>
              <div className="text-[10px] font-black uppercase tracking-widest text-wix-text-muted mb-2">Description:</div>
-             <p className="text-[14px] text-wix-text-muted leading-relaxed whitespace-pre-line">{ev?.description ? cleanText(ev.description) : 'No detailed description provided.'}</p>
+             <div className="flex flex-col gap-3">
+               <div
+                 ref={(el) => {
+                   (descRef as any).current = el;
+                   if (el) setDescOverflows(el.scrollHeight > 200);
+                 }}
+                 className={`text-[14px] text-wix-text-muted leading-relaxed whitespace-pre-line break-words overflow-hidden transition-all duration-500 ${descExpanded ? '' : 'max-h-[200px]'}`}
+               >
+                 {ev?.description ? cleanText(ev.description) : 'No detailed description provided.'}
+               </div>
+               {descOverflows && (
+                 <button
+                   onClick={() => setDescExpanded(v => !v)}
+                   className="self-start text-[11px] font-bold uppercase tracking-widest text-ink hover:text-wix-purple transition-colors"
+                 >
+                   {descExpanded ? 'See Less ↑' : 'See More ↓'}
+                 </button>
+               )}
+             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 pt-6 border-t border-ink/5">
             <div>
@@ -167,31 +214,6 @@ const OverviewTab = ({ setActiveTab, data, onEdit, onRefetch }: { setActiveTab: 
                 {ev?.venue?.name || '—'}
               </div>
             </div>
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 p-8">
-          <div className="flex items-center justify-between mb-10">
-            <h2 className="text-[14px] font-black uppercase tracking-[0.2em] text-wix-text-dark">Live Performance Metrics</h2>
-            <button onClick={() => setActiveTab('Tickets')} className="bg-ink text-white px-5 py-2 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-wix-purple transition-all">Deep Analytics</button>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-6">
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Net Sales</span>
-              <div className="text-[44px] font-bold tracking-tighter leading-none text-ink">{an?.totalTicketsSold ?? 0}<span className="text-[18px] text-gray-300 font-medium ml-2">/ {an?.capacity ?? 0}</span></div>
-            </div>
-            <div className="text-left sm:text-right border-l-2 sm:border-l-0 sm:border-r border-gray-100 pl-4 sm:pl-0 sm:pr-4 flex flex-col gap-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Generated Revenue</span>
-              <div className="text-[28px] font-mono font-bold text-ink flex items-center sm:justify-end gap-1">
-                <BDTIcon className="text-[18px]" />{an?.totalRevenue?.toLocaleString() ?? 0}
-              </div>
-            </div>
-          </div>
-          <div className="w-full h-4 bg-gray-100 border border-gray-200 overflow-hidden mb-2">
-            <div className="h-full bg-ink transition-all duration-700" style={{ width: `${soldPct}%` }} />
-          </div>
-          <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-gray-400">
-            <span>Entry Level</span><span>{soldPct}% Efficiency</span><span>Full Capacity</span>
           </div>
         </div>
       </div>
@@ -1628,7 +1650,7 @@ export default function ManageEvent() {
           </div>
 
           {/* Content */}
-          <div className="px-4 sm:px-8 py-8 sm:py-10">
+          <div className="px-0 sm:px-8 py-8 sm:py-10">
             {loading ? (
               <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-wix-purple" /></div>
             ) : error ? (
