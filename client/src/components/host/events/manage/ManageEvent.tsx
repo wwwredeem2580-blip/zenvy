@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart2, Users, CheckCircle, Ticket,
-  Image as ImageIcon, Megaphone, Settings,
   Calendar, MapPin, ArrowRight, Search, Filter,
   Download, Plus, X, Clock, Trash2, AlertTriangle,
   Mail, Tag, Link as LinkIcon, ArrowLeft, Loader2,
@@ -1069,276 +1068,6 @@ const TicketsTab = ({ data, onUpdate, onRefetch }: { data: HostEventDetailsRespo
   );
 };
 
-
-const GalleryTab = ({ data, onUpdate }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void }) => {
-  const { showNotification } = useNotification();
-  const [gallery, setGallery] = useState<any[]>(data?.event?.media?.gallery ?? []);
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Sync gallery when data changes (e.g. on first load)
-  useEffect(() => {
-    setGallery(data?.event?.media?.gallery ?? []);
-  }, [data?.event?._id]);
-
-  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { mediaService } = await import('@/lib/api/media');
-      const ImageKit = (await import('imagekit-javascript')).default;
-      const auth = await mediaService.getImageKitAuth();
-      const imagekit = new ImageKit({ publicKey: auth.publicKey, urlEndpoint: auth.urlEndpoint });
-      const uploadResponse: any = await new Promise((resolve, reject) => {
-        imagekit.upload({
-          file,
-          fileName: `event_gallery_${Date.now()}_${file.name}`,
-          folder: '/zenvy/event_gallery',
-          useUniqueFileName: true,
-          tags: ['event_gallery'],
-          signature: auth.signature,
-          expire: auth.expire,
-          token: auth.token,
-        }, (err: any, result: any) => { if (err) reject(new Error(err.message)); else resolve(result); });
-      });
-      await mediaService.trackImageKitUpload({
-        fileId: uploadResponse.fileId,
-        url: uploadResponse.url,
-        filename: uploadResponse.name,
-        type: 'event_gallery',
-        status: 'permanent',
-      });
-      setGallery(prev => [...prev, { url: uploadResponse.url, caption: '', thumbnailUrl: uploadResponse.url, order: prev.length + 1 }]);
-      showNotification('success', 'Uploaded', 'Image added to gallery. Click Save to persist.');
-    } catch (err: any) {
-      showNotification('error', 'Upload Failed', err?.message || 'Failed to upload image');
-    } finally {
-      setUploading(false);
-      e.target.value = '';
-    }
-  };
-
-  const handleRemove = (index: number) => {
-    setGallery(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    if (!data?.event) return;
-    setSaving(true);
-    try {
-      const result = await eventsService.updateEventByStatus(
-        data.event._id,
-        data.event.status,
-        { media: { ...data.event.media, gallery } }
-      );
-      showNotification('success', 'Gallery Saved', result.message || 'Gallery updated successfully.');
-      onUpdate({ ...data, event: { ...data.event, media: { ...data.event.media, gallery } } });
-    } catch (err: any) {
-      showNotification('error', 'Save Failed', err?.response?.data?.message || err?.message || 'Failed to save gallery');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-6 animate-in fade-in max-w-[1280px] duration-300">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-[20px] font-medium text-wix-text-dark">Event Gallery</h2>
-          <p className="text-[13px] text-gray-500 mt-1">Upload and manage promotional and recap photos.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          {/* Hidden file input */}
-          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileSelected} className="hidden" />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 sm:px-5 sm:py-2.5 text-[13px] sm:text-[14px] font-medium hover:bg-gray-50 transition-colors border border-wix-border-light disabled:opacity-50 whitespace-nowrap"
-          >
-            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-            {uploading ? 'Uploading...' : 'Upload Media'}
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 sm:px-5 sm:py-2.5 text-[13px] sm:text-[14px] font-medium hover:bg-gray-800 transition-colors border border-black disabled:opacity-50 whitespace-nowrap"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {saving ? 'Saving...' : 'Save Gallery'}
-          </button>
-        </div>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {/* Upload tile */}
-        <div
-          onClick={() => fileInputRef.current?.click()}
-          className="aspect-square border-2 border-dashed border-wix-border-light bg-gray-50 flex flex-col items-center justify-center text-gray-400 hover:text-black hover:border-black transition-colors cursor-pointer group"
-        >
-          {uploading ? (
-            <Loader2 className="w-8 h-8 mb-2 animate-spin" />
-          ) : (
-            <ImageIcon className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform" />
-          )}
-          <span className="text-[13px] font-medium">{uploading ? 'Uploading...' : 'Click to Upload'}</span>
-        </div>
-        {/* Gallery images */}
-        {gallery.map((img, i) => (
-          <div key={i} className="aspect-square relative group border border-wix-border-light overflow-hidden">
-            <img src={img.url} alt={img.caption || ''} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <button
-                onClick={() => handleRemove(i)}
-                className="p-3 bg-white text-red-600 hover:bg-red-600 hover:text-white transition-colors"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      {gallery.length === 0 && !uploading && (
-        <p className="text-[13px] text-gray-400 text-center py-8">No gallery images yet. Upload photos to get started.</p>
-      )}
-    </div>
-  );
-};
-
-
-const MarketingTab = () => {
-  const tools = [
-    { icon: Mail, title: 'Email Campaigns', desc: 'Send announcements and reminders to your attendees list.', btn: 'Create Email' },
-    { icon: Tag, title: 'Discount Codes', desc: 'Create promo codes to boost sales or reward loyal customers.', btn: 'New Promo Code' },
-    { icon: LinkIcon, title: 'Tracking Links', desc: 'Generate unique links to see which channels drive the most sales.', btn: 'Create Link' },
-  ];
-  return (
-    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-      <div>
-        <h2 className="text-[20px] font-medium text-wix-text-dark">Marketing Tools</h2>
-        <p className="text-[13px] text-gray-500 mt-1">Boost attendance and track campaign performance.</p>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {tools.map((tool, i) => (
-          <div key={i} className="bg-white border border-wix-border-light p-6 flex flex-col justify-between hover:border-black transition-colors">
-            <div>
-              <div className="w-10 h-10 bg-gray-100 border border-gray-200 flex items-center justify-center mb-4">
-                <tool.icon className="w-5 h-5 text-black" />
-              </div>
-              <h3 className="text-[16px] font-semibold text-wix-text-dark mb-2">{tool.title}</h3>
-              <p className="text-[13px] text-gray-500 leading-relaxed mb-6">{tool.desc}</p>
-            </div>
-            <button className="w-full border border-black bg-white text-black py-2.5 text-[13px] font-semibold hover:bg-gray-50 transition-colors">{tool.btn}</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-/* ─── Settings Tab ─── */
-const SettingsTab = ({ data, onRefetch }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void; onRefetch: () => Promise<void> }) => {
-  const { showNotification } = useNotification();
-  const router = useRouter();
-  const ev = data?.event;
-
-  const handleCancelEvent = async () => {
-    if (!ev?._id) return;
-    if (!confirm('Are you absolutely sure you want to cancel this event? This will notify all attendees and stop all ticket sales. This action is irreversible.')) return;
-    
-    try {
-      await eventsService.cancelEvent(ev._id);
-      showNotification('success', 'Event Cancelled', 'All ticket sales have been stopped.');
-      await onRefetch();
-    } catch (err: any) {
-      showNotification('error', 'Cancellation Failed', err.message);
-    }
-  };
-
-  const handleDeleteEvent = async () => {
-    if (!ev?._id) return;
-    if (!confirm('Delete this event? This will remove all data and cannot be undone. Only available if no tickets have been sold.')) return;
-    
-    try {
-      await eventsService.deleteEvent(ev._id);
-      showNotification('success', 'Event Deleted', 'Returning to dashboard.');
-      router.push('/host/dashboard');
-    } catch (err: any) {
-      showNotification('error', 'Delete Failed', err.message);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-10 animate-in fade-in duration-300 max-w-[1280px] pb-20">
-      <div>
-        <h2 className="text-[20px] font-medium text-wix-text-dark">Event Settings</h2>
-        <p className="text-[13px] text-gray-500 mt-1">Manage global configurations and moderation of your event spotlight.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="bg-white border border-wix-border-light p-6">
-           <h3 className="text-[14px] font-black uppercase tracking-widest text-black mb-4">Notification Settings</h3>
-           <p className="text-[13px] text-gray-500 mb-6">Control how you receive updates about this event.</p>
-           <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-[14px]">Daily Sales Report</span>
-                <SharpToggle checked={true} onChange={() => {}} />
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-[14px]">New Order Alerts</span>
-                <SharpToggle checked={true} onChange={() => {}} />
-              </div>
-           </div>
-        </div>
-
-        <div className="bg-white border border-wix-border-light p-6">
-           <h3 className="text-[14px] font-black uppercase tracking-widest text-black mb-4">Visibility & Search</h3>
-           <p className="text-[13px] text-gray-500 mb-6">Manage how your event appears on the Zenvy platform.</p>
-           <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-[14px]">Search Engine Indexing</span>
-                <SharpToggle checked={true} onChange={() => {}} />
-              </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-[14px]">Show on Discover Feed</span>
-                <SharpToggle checked={true} onChange={() => {}} />
-              </div>
-           </div>
-        </div>
-      </div>
-
-      <div className="mt-6 pt-10 border-t border-red-100">
-        <h3 className="text-[14px] font-black uppercase tracking-widest text-red-600 mb-2">Danger Zone</h3>
-        <p className="text-[13px] text-gray-500 mb-6">Actions here are permanent and can impact your reputation and hosted funds.</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white border border-red-50 p-6 border-dashed">
-            <h4 className="font-bold text-[14px] text-red-700 mb-1">Cancel Event</h4>
-            <p className="text-[12px] text-gray-500 mb-4">Stop sales and initiate refunds for all ticket holders.</p>
-            <button 
-              onClick={handleCancelEvent}
-              className="text-[11px] font-black uppercase tracking-widest text-red-600 border border-red-200 px-6 py-2.5 hover:bg-red-600 hover:text-white transition-all shadow-sm"
-            >
-              Cancel Event
-            </button>
-          </div>
-          
-          <div className="bg-white border border-red-50 p-6 border-dashed">
-            <h4 className="font-bold text-[14px] text-red-700 mb-1">Delete Event</h4>
-            <p className="text-[12px] text-gray-500 mb-4">Remove all event records. Only available if no tickets have been sold.</p>
-            <button 
-              onClick={handleDeleteEvent}
-              className="text-[11px] font-black uppercase tracking-widest text-red-600 border border-red-200 px-6 py-2.5 hover:bg-red-600 hover:text-white transition-all shadow-sm"
-            >
-              Delete Event
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const RestrictedTimePicker = ({ originalTime, label, value, onChange }: { originalTime: string; label: string; value?: string; onChange?: (v: string) => void }) => {
   const options = useMemo(() => {
     const [h] = originalTime.split(':').map(Number);
@@ -1741,8 +1470,8 @@ export default function ManageEvent() {
     }`}>{ev.status.replace('_', ' ')}</span>
   ) : null;
 
-  const ALL_TABS = ['Overview', 'Attendees', 'Checkin', 'Tickets', 'Gallery', 'Marketing', 'Settings'];
-  const RESTRICTED_TABS = ['Overview', 'Tickets', 'Settings'];
+  const ALL_TABS = ['Overview', 'Attendees', 'Checkin', 'Tickets'];
+  const RESTRICTED_TABS = ['Overview', 'Tickets'];
   const visibleTabs = useMemo(() => {
     const s = ev?.status;
     if (s === 'pending_approval' || s === 'approved') return RESTRICTED_TABS;
@@ -1754,9 +1483,6 @@ export default function ManageEvent() {
     { key: 'Attendees', icon: Users, label: 'Attendees' },
     { key: 'Checkin', icon: CheckCircle, label: 'Check-in' },
     { key: 'Tickets', icon: Ticket, label: 'Tickets & Pricing' },
-    { key: 'Gallery', icon: ImageIcon, label: 'Gallery' },
-    { key: 'Marketing', icon: Megaphone, label: 'Marketing' },
-    { key: 'Settings', icon: Settings, label: 'Settings' },
   ].filter(t => visibleTabs.includes(t.key));
 
   return (
@@ -1838,9 +1564,6 @@ export default function ManageEvent() {
                 {activeKey === 'Attendees' && <AttendeesTab data={data} highlightId={highlightId} />}
                 {activeKey === 'Checkin' && <CheckinTab data={data} highlightId={highlightId} />}
                 {activeKey === 'Tickets' && <TicketsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
-                {activeKey === 'Gallery' && <GalleryTab data={data} onUpdate={setData} />}
-                {activeKey === 'Marketing' && <MarketingTab />}
-                {activeKey === 'Settings' && <SettingsTab data={data} onUpdate={setData} onRefetch={fetchEventData} />}
               </div>
             )}
           </div>
