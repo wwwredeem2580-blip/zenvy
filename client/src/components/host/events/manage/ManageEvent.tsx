@@ -1236,6 +1236,109 @@ const MarketingTab = () => {
   );
 };
 
+/* ─── Settings Tab ─── */
+const SettingsTab = ({ data, onRefetch }: { data: HostEventDetailsResponse | null; onUpdate: (d: HostEventDetailsResponse) => void; onRefetch: () => Promise<void> }) => {
+  const { showNotification } = useNotification();
+  const router = useRouter();
+  const ev = data?.event;
+
+  const handleCancelEvent = async () => {
+    if (!ev?._id) return;
+    if (!confirm('Are you absolutely sure you want to cancel this event? This will notify all attendees and stop all ticket sales. This action is irreversible.')) return;
+    
+    try {
+      await eventsService.cancelEvent(ev._id);
+      showNotification('success', 'Event Cancelled', 'All ticket sales have been stopped.');
+      await onRefetch();
+    } catch (err: any) {
+      showNotification('error', 'Cancellation Failed', err.message);
+    }
+  };
+
+  const handleDeleteEvent = async () => {
+    if (!ev?._id) return;
+    if (!confirm('Delete this event? This will remove all data and cannot be undone. Only available if no tickets have been sold.')) return;
+    
+    try {
+      await eventsService.deleteEvent(ev._id);
+      showNotification('success', 'Event Deleted', 'Returning to dashboard.');
+      router.push('/host/dashboard');
+    } catch (err: any) {
+      showNotification('error', 'Delete Failed', err.message);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-10 animate-in fade-in duration-300 max-w-[1280px] pb-20">
+      <div>
+        <h2 className="text-[20px] font-medium text-wix-text-dark">Event Settings</h2>
+        <p className="text-[13px] text-gray-500 mt-1">Manage global configurations and moderation of your event spotlight.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white border border-wix-border-light p-6">
+           <h3 className="text-[14px] font-black uppercase tracking-widest text-black mb-4">Notification Settings</h3>
+           <p className="text-[13px] text-gray-500 mb-6">Control how you receive updates about this event.</p>
+           <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center py-3 border-b border-gray-50">
+                <span className="text-[14px]">Daily Sales Report</span>
+                <SharpToggle checked={true} onChange={() => {}} />
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-50">
+                <span className="text-[14px]">New Order Alerts</span>
+                <SharpToggle checked={true} onChange={() => {}} />
+              </div>
+           </div>
+        </div>
+
+        <div className="bg-white border border-wix-border-light p-6">
+           <h3 className="text-[14px] font-black uppercase tracking-widest text-black mb-4">Visibility & Search</h3>
+           <p className="text-[13px] text-gray-500 mb-6">Manage how your event appears on the Zenvy platform.</p>
+           <div className="flex flex-col gap-4">
+              <div className="flex justify-between items-center py-3 border-b border-gray-50">
+                <span className="text-[14px]">Search Engine Indexing</span>
+                <SharpToggle checked={true} onChange={() => {}} />
+              </div>
+              <div className="flex justify-between items-center py-3 border-b border-gray-50">
+                <span className="text-[14px]">Show on Discover Feed</span>
+                <SharpToggle checked={true} onChange={() => {}} />
+              </div>
+           </div>
+        </div>
+      </div>
+
+      <div className="mt-6 pt-10 border-t border-red-100">
+        <h3 className="text-[14px] font-black uppercase tracking-widest text-red-600 mb-2">Danger Zone</h3>
+        <p className="text-[13px] text-gray-500 mb-6">Actions here are permanent and can impact your reputation and hosted funds.</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white border border-red-50 p-6 border-dashed">
+            <h4 className="font-bold text-[14px] text-red-700 mb-1">Cancel Event</h4>
+            <p className="text-[12px] text-gray-500 mb-4">Stop sales and initiate refunds for all ticket holders.</p>
+            <button 
+              onClick={handleCancelEvent}
+              className="text-[11px] font-black uppercase tracking-widest text-red-600 border border-red-200 px-6 py-2.5 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+            >
+              Cancel Event
+            </button>
+          </div>
+          
+          <div className="bg-white border border-red-50 p-6 border-dashed">
+            <h4 className="font-bold text-[14px] text-red-700 mb-1">Delete Event</h4>
+            <p className="text-[12px] text-gray-500 mb-4">Remove all event records. Only available if no tickets have been sold.</p>
+            <button 
+              onClick={handleDeleteEvent}
+              className="text-[11px] font-black uppercase tracking-widest text-red-600 border border-red-200 px-6 py-2.5 hover:bg-red-600 hover:text-white transition-all shadow-sm"
+            >
+              Delete Event
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const RestrictedTimePicker = ({ originalTime, label, value, onChange }: { originalTime: string; label: string; value?: string; onChange?: (v: string) => void }) => {
   const options = useMemo(() => {
     const [h] = originalTime.split(':').map(Number);
@@ -1639,7 +1742,7 @@ export default function ManageEvent() {
   ) : null;
 
   const ALL_TABS = ['Overview', 'Attendees', 'Checkin', 'Tickets', 'Gallery', 'Marketing', 'Settings'];
-  const RESTRICTED_TABS = ['Tickets', 'Settings'];
+  const RESTRICTED_TABS = ['Overview', 'Tickets', 'Settings'];
   const visibleTabs = useMemo(() => {
     const s = ev?.status;
     if (s === 'pending_approval' || s === 'approved') return RESTRICTED_TABS;
@@ -1651,6 +1754,9 @@ export default function ManageEvent() {
     { key: 'Attendees', icon: Users, label: 'Attendees' },
     { key: 'Checkin', icon: CheckCircle, label: 'Check-in' },
     { key: 'Tickets', icon: Ticket, label: 'Tickets & Pricing' },
+    { key: 'Gallery', icon: ImageIcon, label: 'Gallery' },
+    { key: 'Marketing', icon: Megaphone, label: 'Marketing' },
+    { key: 'Settings', icon: Settings, label: 'Settings' },
   ].filter(t => visibleTabs.includes(t.key));
 
   return (
