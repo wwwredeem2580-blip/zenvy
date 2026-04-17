@@ -245,37 +245,38 @@ export default function ScannerPage() {
         let duplicateCount = 0;
         let failedCount = 0;
         
-        for (const scan of unsyncedScans) {
-          const retryCount = scan.retryCount || 0;
-          
-          // Check retry limit
-          if (retryCount >= MAX_RETRIES) {
-            console.error(`❌ Scan ${scan.id} exceeded max retries (${MAX_RETRIES}), marking as failed`);
-            await scannerDB.markScanAsFailed(scan.id);
-            failedCount++;
-            continue;
-          }
+        try {
+          // Batch all queued scans into one API call using the dedicated sync endpoint
+          const scansPayload = unsyncedScans.map(s => ({
+            ticketId: s.ticketId || '',
+            qrData: s.qrData,
+            scanTimestamp: new Date(s.scannedAt).toISOString(),
+            localScanId: s.id
+          }));
 
-          try {
-            await scannerService.verifyTicket(
-              scan.qrData,
-              scan.accessToken,
-              scan.deviceId
-            );
-            await scannerDB.markScanAsSynced(scan.id);
-            syncedCount++;
-          } catch (error: any) {
-            // If ticket was already checked in, mark as synced (not an error)
-            if (error.message?.includes('ALREADY_CHECKED_IN') || error.message?.includes('already checked in')) {
-              console.log(`✅ Scan ${scan.id} already synced (duplicate), marking as complete`);
-              await scannerDB.markScanAsSynced(scan.id);
-              duplicateCount++;
-            } else {
-              console.error(`⚠️ Failed to sync scan ${scan.id} (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error.message);
-              // Increment retry count for next attempt
-              await scannerDB.incrementRetryCount(scan.id);
-            }
+          const syncResult = await scannerService.syncOfflineScans(
+            session.accessToken,
+            session.deviceId,
+            scansPayload
+          );
+
+          syncedCount = syncResult.synced || 0;
+          duplicateCount = syncResult.conflicts || 0;
+          failedCount = syncResult.rejected || 0;
+
+          // Mark all as synced / failed based on result
+          for (const scanId of (syncResult.results?.accepted || [])) {
+            await scannerDB.markScanAsSynced(scanId);
           }
+          for (const item of (syncResult.results?.conflicts || [])) {
+            await scannerDB.markScanAsSynced(item.localScanId); // duplicate = treat as synced
+          }
+          for (const item of (syncResult.results?.rejected || [])) {
+            await scannerDB.incrementRetryCount(item.localScanId);
+          }
+        } catch (error: any) {
+          console.error('❌ Batch sync failed:', error);
+          failedCount = unsyncedScans.length;
         }
 
         console.log(`✅ Sync complete: ${syncedCount} synced, ${duplicateCount} duplicates, ${failedCount} failed`);
@@ -354,8 +355,9 @@ export default function ScannerPage() {
           // Network error - fallback to offline mode
           console.warn('API call failed, falling back to offline mode:', apiError);
           
-          // Temporarily set offline
-          setIsOnline(false);
+          // NOTE: Do NOT call setIsOnline(false) here - that would permanently lock
+          // the device in offline mode. The window online/offline events manage real
+          // connectivity state. We just use offline verification for this single scan.
           
           // Use offline verification
           const ticket = await scannerDB.getTicketByQRHash(decodedText);

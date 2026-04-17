@@ -708,10 +708,9 @@ export const verifyTicketScanService = async (
   // Update device activity
   await device.updateActivity();
 
-  // Find ticket by QR code
+  // Find ticket by QR code (do NOT use .lean() - we need .save() to persist check-in)
   const ticket = await Ticket.findOne({ qrCode: qrData })
-    .select('_id ticketNumber eventId userId status checkInStatus checkedInAt validUntil ticketType')
-    .lean();
+    .select('_id ticketNumber eventId userId status checkInStatus checkedInAt validUntil ticketType ticketVariantId eventTitle');
   if (!ticket) {
     // Log failed scan
     await new ScanLog({

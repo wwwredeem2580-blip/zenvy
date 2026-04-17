@@ -229,6 +229,36 @@ class ScannerService {
   }
 
   /**
+   * Sync offline scans to server (batched)
+   */
+  async syncOfflineScans(
+    accessToken: string,
+    deviceId: string,
+    scans: Array<{
+      ticketId: string;
+      qrData: string;
+      scanTimestamp: string;
+      localScanId: string;
+    }>
+  ): Promise<{
+    success: boolean;
+    synced: number;
+    rejected: number;
+    conflicts: number;
+    results: {
+      accepted: string[];
+      rejected: { localScanId: string; reason: string }[];
+      conflicts: { localScanId: string; reason: string }[];
+    };
+  }> {
+    return await apiClient.post('/api/scanner/sync', {
+      accessToken,
+      deviceId,
+      scans
+    });
+  }
+
+  /**
    * Close a scanner session
    */
   async closeSession(sessionId: string): Promise<{ success: boolean; message: string }> {
