@@ -1180,9 +1180,10 @@ export const searchTicketsService = async (
   }
 
   // Search tickets by partial match (case-insensitive)
+  // Include 'used' so already-checked-in tickets appear in manual lookup
   const tickets = await Ticket.find({
     eventId: session.eventId,
-    status: { $in: ['valid', 'cancelled', 'refunded'] },
+    status: { $in: ['valid', 'used', 'cancelled', 'refunded'] },
     ticketNumber: { $regex: sanitizedQuery, $options: 'i' }
   })
     .limit(10) // Max 10 results

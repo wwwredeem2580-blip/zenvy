@@ -685,11 +685,30 @@ const CheckinTab = ({ data, highlightId }: { data: HostEventDetailsResponse | nu
         </div>
 
         <div className="p-6">
-          {!session?.session?._id && (
-            <div className="mb-4 p-3 border border-amber-200 bg-amber-50 text-amber-700 text-[13px] font-medium">
-              ⚠ No active scanner session. Activate a session above to enable check-in.
+          {!session?.session?._id ? (
+            <div
+              className="mb-4 p-4 border-2 border-amber-400 bg-amber-50 rounded flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 cursor-pointer group hover:bg-amber-100 transition-colors"
+              onClick={() => {
+                const btn = document.getElementById('activate-scanner-btn');
+                if (btn) {
+                  btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  btn.classList.add('animate-focus-highlight');
+                  setTimeout(() => btn.classList.remove('animate-focus-highlight'), 3000);
+                }
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-amber-500 text-xl leading-none mt-0.5">⚠</span>
+                <div>
+                  <div className="text-[13px] font-bold text-amber-800">Scanner session not active</div>
+                  <div className="text-[12px] text-amber-700 mt-0.5">Manual lookup requires an active scanner session. Tickets will not show up until one is started.</div>
+                </div>
+              </div>
+              <span className="shrink-0 text-[11px] font-black uppercase tracking-widest text-amber-800 border border-amber-400 px-3 py-1.5 group-hover:bg-amber-200 transition-colors flex items-center gap-1.5">
+                <Scan className="w-3 h-3" /> Activate Session ↑
+              </span>
             </div>
-          )}
+          ) : null}
 
           {!verificationResult ? (
             <div className={`relative ${highlightId === 'manual-checkin-input' ? 'animate-focus-highlight' : ''}`} ref={manualDropdownRef}>

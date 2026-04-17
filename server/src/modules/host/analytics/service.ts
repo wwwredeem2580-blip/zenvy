@@ -518,31 +518,27 @@ export const getEventAnalytics = async (eventId: string) => {
     { $sort: { _id: 1 } }
   ]);
   
-  // Get check-in status (if event has started)
-  const event = await Event.findById(eventId).lean<IEvent>();
-  let checkInStats = null;
-  
-  if (event?.schedule?.startDate && new Date(event.schedule.startDate) <= new Date()) {
-    const checkInData = await Ticket.aggregate([
-      {
-        $match: {
-          eventId: new mongoose.Types.ObjectId(eventId)
-        }
-      },
-      {
-        $group: {
-          _id: "$checkInStatus",
-          count: { $sum: 1 }
-        }
+  // Always compute check-in stats — check-ins can happen before the event start time
+  // (e.g. early entry, pre-event scanning). The date gate was causing counters to show 0.
+  const checkInData = await Ticket.aggregate([
+    {
+      $match: {
+        eventId: new mongoose.Types.ObjectId(eventId)
       }
-    ]);
-    
-    checkInStats = {
-      checkedIn: checkInData.find((d: any) => d._id === 'checked_in')?.count || 0,
-      notCheckedIn: checkInData.find((d: any) => d._id === 'not_checked_in')?.count || 0,
-      total: basicAnalytics.totalTicketsSold
-    };
-  }
+    },
+    {
+      $group: {
+        _id: "$checkInStatus",
+        count: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const checkInStats = {
+    checkedIn: checkInData.find((d: any) => d._id === 'checked_in')?.count || 0,
+    notCheckedIn: checkInData.find((d: any) => d._id === 'not_checked_in')?.count || 0,
+    total: basicAnalytics.totalTicketsSold
+  };
   
   return {
     ...basicAnalytics,
