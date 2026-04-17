@@ -146,8 +146,7 @@ export const getTicketsForOfflineCacheService = async (sessionId: string, device
     status: { $in: ['valid', 'cancelled', 'refunded'] } // Include all for proper offline validation
   })
     .select('ticketNumber ticketType status holderName qrCode')
-    .lean() // Performance optimization
-    .hint({ eventId: 1, status: 1 }); // Use index
+    .lean(); // Performance optimization
 
   console.log(`✅ Found ${tickets.length} tickets for caching`);
   
@@ -709,11 +708,10 @@ export const verifyTicketScanService = async (
   // Update device activity
   await device.updateActivity();
 
-  // Find ticket by QR code (optimized with index hint)
+  // Find ticket by QR code
   const ticket = await Ticket.findOne({ qrCode: qrData })
     .select('_id ticketNumber eventId userId status checkInStatus checkedInAt validUntil ticketType')
-    .lean()
-    .hint({ qrCode: 1 }); // Use QR code index
+    .lean();
   if (!ticket) {
     // Log failed scan
     await new ScanLog({
