@@ -40,7 +40,7 @@ const tagFilters = ['All', 'Concerts', 'Sports & Outdoors', 'Conferences', 'Fest
 
 export default function Events() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   // Nav state removed as it is now global in layout
 
@@ -108,8 +108,7 @@ export default function Events() {
   const handleSearchKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleSearch(); };
 
   const handleLogout = async () => {
-    await authService.logout();
-    router.push('/auth?tab=login');
+    await logout('/auth?tab=login');
   };
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v);

@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
@@ -51,9 +51,8 @@ export default function Sidebar() {
   const filteredMenuItems = menuItems.filter((item) => !item.requireRole || item.requireRole === user?.role);
 
   const handleSignOut = async () => {
-    await authService.logout()
-    router.push('/auth?tab=login')
-  }
+    await logout('/auth?tab=login');
+  };
 
   const handleNavigate = (path: string) => {
     router.push(path);

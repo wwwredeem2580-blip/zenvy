@@ -200,15 +200,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+  const logout = async (redirectPath: string = '/') => {
     try {
       await authService.logout();
       setUser(null);
       showNotification('info', 'Logged out', 'See you next time!');
-      router.push('/landing');
-      router.refresh();
+      router.push(redirectPath);
+      router.refresh(); // Crucial for purging cached server components
     } catch (error) {
       console.error('Logout failed', error);
+      // Even if API fails, clear local state
+      setUser(null);
+      router.push(redirectPath);
     }
   };
 

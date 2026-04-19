@@ -20,7 +20,7 @@ export const Navbar: React.FC = () => {
   
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -43,8 +43,7 @@ export const Navbar: React.FC = () => {
   ];
 
   const handleLogout = async () => {
-    await authService.logout();
-    router.push('/');
+    await logout();
   };
 
   const activeLinkClass = "text-ink";
