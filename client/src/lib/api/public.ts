@@ -1,6 +1,10 @@
 import { apiClient } from './client';
 
 export const publicService = {
+  getPastEvents: async (limit: number = 10): Promise<any> => {
+    const response = await apiClient.get(`/api/event/public/past?limit=${limit}`);
+    return response;
+  },
   getEvents: async (
     params?: {
       category?: string;

@@ -4,7 +4,8 @@ import {
   getEventDetailsService,
   getFeaturedEventsService,
   getTrendingEventsService,
-  getRecommendedEventsService
+  getRecommendedEventsService,
+  getPastEventsService
 } from './service';
 import { handleError } from '../../../utils/handleError';
 
@@ -63,6 +64,16 @@ router.get('/recommended', async (req, res) => {
     res.status(200).json(recommendations);
   } catch (error) {
     console.error('Error fetching recommended events:', error);
+    handleError(error, res);
+  }
+});
+router.get('/past', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 10;
+    const events = await getPastEventsService(limit);
+    res.status(200).json(events);
+  } catch (error) {
+    console.error('Error fetching past events:', error);
     handleError(error, res);
   }
 });

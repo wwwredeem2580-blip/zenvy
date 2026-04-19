@@ -214,3 +214,17 @@ async function trackEventView(eventId: string, userId?: string) {
   
   await Event.updateOne({ _id: eventId }, { $inc: { 'metrics.uniqueViews': 1 } });
 }
+// --- Get Past Events ---
+export const getPastEventsService = async (limit: number = 10) => {
+  const events = await Event.find({
+    status: 'ended',
+    'moderation.visibility': 'public',
+    'flags.suspended': { $ne: true },
+  })
+    .select('_id slug title type categories tagline media.coverImage venue.name venue.address.city venue.address.state schedule.startDate schedule.endDate metrics.views status')
+    .sort({ 'schedule.startDate': -1 })
+    .limit(limit)
+    .lean();
+    
+  return events;
+};

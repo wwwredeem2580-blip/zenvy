@@ -17,6 +17,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { BDTIcon } from '../ui/Icons';
 import PaymentStatusModal from './PaymentStatusModal';
+import PastEventsShowcase from './PastEventsShowcase';
 
 interface EventFilters {
   category?: string;
@@ -54,6 +55,7 @@ export default function Events() {
   // Data state
   const [allLocations, setAllLocations] = useState<string[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [pastEvents, setPastEvents] = useState<any[]>([]);
   const [trendingEvents, setTrendingEvents] = useState<any[]>([]);
   const [featuredEvents, setFeaturedEvents] = useState<any[]>([]);
 
@@ -71,6 +73,8 @@ export default function Events() {
         setTrendingEvents(trending);
         const featured = await publicService.getFeaturedEvents(10);
         setFeaturedEvents(featured);
+        const past = await publicService.getPastEvents(8);
+        setPastEvents(past);
       } catch (err) {
         console.error('Failed to fetch initial data', err);
       }
@@ -193,6 +197,8 @@ export default function Events() {
           </motion.div>
         </div>
       </section>
+
+
 
       {/* ─── Filter Bar ─── */}
       <nav className="flex flex-col md:flex-row max-w-[1400px] mx-auto md:items-center justify-between px-4 md:px-10 2xl:px-0 py-4 border-b border-gray-200 text-[15px] gap-4 md:gap-0">
@@ -390,6 +396,21 @@ export default function Events() {
           </section>
         </div>
       </main>
+
+      {/* ─── Past Events Showcase ─── */}
+      <AnimatePresence>
+        {pastEvents.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="mt-0"
+          >
+            <PastEventsShowcase events={pastEvents} />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── Payment Status Modal (PayStation callback) ─── */}
       <PaymentStatusModal />
