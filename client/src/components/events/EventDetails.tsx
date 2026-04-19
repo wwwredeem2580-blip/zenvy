@@ -183,7 +183,14 @@ const SelectableTicketCard = ({
             </div> */}
 
             <div className={`text-[12px] font-wix tracking-widest uppercase pt-3 border-t mt-4 flex justify-between items-center ${qty > 0 ? 'border-white/10' : 'border-black/10'}`}>
-              <span className={`text-[10px] font-bold ${qty > 0 ? 'text-bg' : 'text-ink'}`}>Price/Ticket -------- {price === 0 ? 'FREE' : <><span className='font-mono text-[12px]'>৳</span><span className='text-[20px]'>{price.toLocaleString()}</span></>}</span>
+              <div className={`text-[10px] flex items-center justify-between w-full font-bold ${qty > 0 ? 'text-bg' : 'text-ink'}`}>
+                <div>Price/Ticket</div>
+                <div>{price === 0 ? 'FREE' : <>
+                <span className='font-mono text-[12px]'>৳</span>
+                <span className='text-[20px]'>{price.toLocaleString()}</span>
+                </>}
+                </div>
+              </div>
             </div>
 
             <button 
@@ -712,7 +719,19 @@ export default function EventDetails() {
 
           {/* ─── Tickets Section ─── */}
           <div id="tickets-section" className="pt-20 border-t border-ink/5">
-            <h2 className="text-3xl font-serif mb-12">Select Your Experience</h2>
+            {event.status === 'ended' ? (
+              <div className="bg-neutral-50 border border-ink/5 flex flex-col items-center justify-center py-20 px-4 text-center">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-black/5">
+                  <Calendar size={24} className="text-ink/40" />
+                </div>
+                <h2 className="text-3xl font-serif tracking-tight mb-3">Event Concluded</h2>
+                <p className="text-ink-muted max-w-[720px] mx-auto text-[15px] leading-relaxed">
+                  Thank you to everyone who attended! Tickets for this past event are no longer available.
+                </p>
+              </div>
+            ) : (
+              <>
+                <h2 className="text-3xl font-serif mb-12">Select Your Experience</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-10">
               {(event.tickets || [])
                 .filter((t: any) => t.isVisible && t.isActive)
@@ -745,26 +764,64 @@ export default function EventDetails() {
                    ৳{grandTotal.toLocaleString()}
                 </span>
                 {totalItems > 0 && (
-                  <span className="text-xs uppercase tracking-widest opacity-40">{totalItems} Tickets Selected</span>
+                  <div className="flex flex-col items-center gap-1 mt-2">
+                    <span className="text-sm uppercase tracking-widest opacity-80">Subtotal: ৳{totalAmount.toLocaleString()}</span>
+                    {paymentProcessingFee > 0 && (
+                      <span className="text-[12px] uppercase tracking-widest text-ink/80">1.5% Processing Fee: ৳{paymentProcessingFee.toLocaleString()}</span>
+                    )}
+                  </div>
                 )}
               </div>
               <button 
                 onClick={handleBookNow}
                 disabled={totalItems === 0 || creatingOrder}
-                className="px-12 py-6 bg-indigo-600 text-bg font-bold uppercase tracking-[0.4em] text-xs disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center gap-3"
+                className="px-12 py-6 bg-indigo-600 text-bg font-bold uppercase tracking-[0.4em] text-xs disabled:opacity-20 disabled:cursor-not-allowed hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-100 flex items-center gap-3 hidden md:flex"
               >
                 {creatingOrder ? <Loader2 className="animate-spin w-4 h-4" /> : null}
                 {creatingOrder ? 'Processing...' : 'Confirm Purchase'}
               </button>
-              <p className="text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold">
+              <p className="text-[10px] text-ink-muted uppercase tracking-[0.2em] font-bold hidden md:block">
                 Secure checkout powered by Zenvy Pay
               </p>
             </div>
             
+            {/* Mobile Sticky Checkout Bar */}
+            <AnimatePresence>
+              {totalItems > 0 && (
+                <motion.div 
+                  initial={{ y: '100%' }}
+                  animate={{ y: 0 }}
+                  exit={{ y: '100%' }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                  className="fixed bottom-0 left-0 right-0 z-[100] bg-white border-t border-ink/10 p-4 md:hidden shadow-[0_-20px_40px_rgba(0,0,0,0.08)] pb-[calc(1rem+env(safe-area-inset-bottom))]"
+                >
+                  <div className="flex items-center justify-between max-w-[450px] mx-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase tracking-widest text-ink/60 font-bold">Total ({totalItems})</span>
+                      <span className="text-2xl font-serif leading-none mt-1 text-ink">৳{grandTotal.toLocaleString()}</span>
+                      {paymentProcessingFee > 0 && (
+                        <span className="text-[12px] text-ink/80 mt-1 whitespace-nowrap">Incl. ৳{paymentProcessingFee.toLocaleString()} fee</span>
+                      )}
+                    </div>
+                    <button 
+                      onClick={handleBookNow}
+                      disabled={creatingOrder}
+                      className="px-6 py-4 bg-indigo-600 text-bg font-bold uppercase tracking-[0.1em] text-[11px] disabled:opacity-50 hover:bg-indigo-700 transition-all flex items-center gap-2 rounded-2xl"
+                    >
+                      {creatingOrder ? <Loader2 className="animate-spin w-4 h-4" /> : null}
+                      {creatingOrder ? 'Processing...' : 'Purchase Now'}
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {orderError && (
               <div className="mt-6 p-4 bg-red-50 border border-red-200 text-[13px] text-red-600 text-center mx-auto max-w-md">
                 {orderError}
               </div>
+            )}
+              </>
             )}
           </div>
 

@@ -112,7 +112,8 @@ export default function Events() {
   const handleSearchKey = (e: React.KeyboardEvent) => { if (e.key === 'Enter') handleSearch(); };
 
   const handleLogout = async () => {
-    await logout('/auth?tab=login');
+    await logout();
+    router.push('/auth?tab=login');
   };
 
   const activeFilters = Object.entries(filters).filter(([, v]) => v);
