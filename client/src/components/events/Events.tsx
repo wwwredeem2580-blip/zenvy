@@ -127,7 +127,7 @@ export default function Events() {
     <div className="min-h-screen mt-20 font-sans text-[#161616]">
 
       {/* Hero Section */}
-      <section className="pt-20 pb-20">
+      <section className="pt-20 pb-4 md:pb-10">
         <div className="grid md:grid-cols-2 gap-12 items-end">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -145,7 +145,7 @@ export default function Events() {
               জেনভি বাংলাদেশের সেরা ইভেন্ট প্ল্যাটফর্ম। আর্ট শো থেকে শুরু করে বড় টেক সামিট—সবকিছুই আপনার হাতের নাগালে।
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-row md:flex-col gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-ink/30" size={18} />
                 <input 
@@ -159,9 +159,9 @@ export default function Events() {
               </div>
               <button 
                 onClick={handleSearch}
-                className="bg-ink text-bg px-8 py-4 rounded-2xl font-medium flex items-center justify-center gap-2 hover:gap-4 transition-all group shrink-0"
+                className="bg-ink text-bg px-4 md:px-8 py-2 md:py-4 rounded-2xl font-medium flex max-w-fit items-center justify-center gap-2 hover:gap-4 transition-all group shrink-0"
               >
-                Find Events <ArrowRight size={18} className="transition-all" />
+                <span className="hidden md:flex">Find Events</span> <ArrowRight size={16} className="transition-all" />
               </button>
             </div>
           </motion.div>
@@ -279,20 +279,6 @@ export default function Events() {
             </AnimatePresence>
           </div>
         </div>
-
-        {/* Right tag filters */}
-        <div className="flex items-center gap-3 md:gap-5 overflow-x-auto whitespace-nowrap pb-1 md:pb-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <div className="hidden md:block w-px h-5 bg-gray-200" />
-          {tagFilters.map(tag => (
-            <button
-              key={tag}
-              onClick={() => setSelectedTag(tag)}
-              className={`text-[14px] transition-colors ${selectedTag === tag ? 'text-[#4d33de] font-semibold' : 'text-gray-600 hover:text-[#4d33de]'}`}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
       </nav>
 
       {/* ─── Main Content ─── */}
@@ -300,7 +286,7 @@ export default function Events() {
         <div className="max-w-[1400px] mx-auto">
 
           {/* Heading + Sort */}
-          <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
+          <div className="mb-6 hidden md:flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2">
             <div>
               <div className="text-[12px] text-gray-400 mb-1">Zenvy Events /</div>
               <h2 className="text-2xl md:text-[28px] font-medium tracking-tight">
