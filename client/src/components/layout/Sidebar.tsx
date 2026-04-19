@@ -51,7 +51,8 @@ export default function Sidebar() {
   const filteredMenuItems = menuItems.filter((item) => !item.requireRole || item.requireRole === user?.role);
 
   const handleSignOut = async () => {
-    await logout('/auth?tab=login');
+    await logout();
+    router.push('/auth?tab=login');
   };
 
   const handleNavigate = (path: string) => {
