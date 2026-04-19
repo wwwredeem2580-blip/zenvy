@@ -335,8 +335,9 @@ export const handlePaystationCallbackService = async (
     };
   }
 
-  // 3. CHECK ORDER EXPIRY
-  if (order.expiresAt < new Date()) {
+  // 3. CHECK ORDER EXPIRY (with 10-minute grace period for callback latency)
+  const gracePeriod = 10 * 60 * 1000; // 10 minutes in ms
+  if (order.expiresAt.getTime() + gracePeriod < Date.now()) {
     throw new CustomError('Order has expired', 400);
   }
 
@@ -393,7 +394,14 @@ export const handlePaystationCallbackService = async (
   const verifiedAmount = parseFloat(verification.data?.payment_amount || '0');
   if (verifiedAmount !== order.pricing?.subtotal) {
     console.error(
-      `[SECURITY] AMOUNT MISMATCH: Order ${order._id}, Expected: ${order.pricing?.subtotal}, Received: ${verifiedAmount}`
+      `[SECURITY_AUDIT] AMOUNT MISMATCH DETECTED: 
+       - Order ID: ${order._id}
+       - Order Number: ${order.orderNumber}
+       - Expected Amount: ${order.pricing?.subtotal} BDT
+       - Gateway Verified Amount: ${verifiedAmount} BDT
+       - Transaction ID: ${verification.data?.trx_id}
+       - User ID: ${order.userId}
+       - Timestamp: ${new Date().toISOString()}`
     );
     await Payment.updateOne(
       { paymentId: invoice_number },

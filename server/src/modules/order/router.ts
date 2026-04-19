@@ -75,7 +75,7 @@ router.get('/callback', async (req: Request, res: Response) => {
 
   if (!invoice_number || typeof invoice_number !== 'string') {
     console.error('[CALLBACK] Missing invoice_number in callback');
-    return res.redirect(`${process.env.CLIENT_URL}/?payment=failed`);
+    return res.redirect(`${process.env.CLIENT_URL}/?payment=failed&reason=invalid_callback`);
   }
 
   try {
@@ -87,18 +87,23 @@ router.get('/callback', async (req: Request, res: Response) => {
     if (result.success) {
       // Redirect back to the event page with success flag
       if (result.eventId) {
-        return res.redirect(`${process.env.CLIENT_URL}/events/${result.eventId}?payment=success`);
+        return res.redirect(`${process.env.CLIENT_URL}/events/${result.eventId}?payment=success&orderId=${result.orderId}`);
       }
       // Fallback: send to wallet if we can't determine the event
       return res.redirect(`${process.env.CLIENT_URL}/wallet?payment=success`);
     } else {
-      // Payment failed or cancelled — send back to home with error flag
-      return res.redirect(`${process.env.CLIENT_URL}/?payment=failed`);
+      // Payment failed or cancelled — send back to event page with context so the user can retry
+      const reason = (status as string)?.toLowerCase() === 'canceled' ? 'cancelled' : 'failed';
+      if (result.eventId) {
+        return res.redirect(`${process.env.CLIENT_URL}/events/${result.eventId}?payment=${reason}&orderId=${result.orderId}`);
+      }
+      return res.redirect(`${process.env.CLIENT_URL}/?payment=${reason}`);
     }
   } catch (error: any) {
     console.error('[CALLBACK] Error processing PayStation callback:', error?.message);
-    return res.redirect(`${process.env.CLIENT_URL}/?payment=failed`);
+    return res.redirect(`${process.env.CLIENT_URL}/?payment=failed&reason=server_error`);
   }
 });
+
 
 export default router;

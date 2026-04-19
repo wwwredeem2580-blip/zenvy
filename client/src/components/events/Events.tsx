@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BDTIcon } from '../ui/Icons';
+import PaymentStatusModal from './PaymentStatusModal';
 
 interface EventFilters {
   category?: string;
@@ -404,6 +405,9 @@ export default function Events() {
           </section>
         </div>
       </main>
+
+      {/* ─── Payment Status Modal (PayStation callback) ─── */}
+      <PaymentStatusModal />
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/context/auth';
 import { useNotification } from '@/lib/context/notification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckoutBKash } from './CheckoutBKash';
+import PaymentStatusModal from './PaymentStatusModal';
 import { cleanText } from '@/lib/utils';
 import {
   ArrowLeft,
@@ -327,14 +328,8 @@ export default function EventDetails() {
     fetch();
   }, [eventId]);
 
-  // Check payment success from URL
-  useEffect(() => {
-    const sp = new URLSearchParams(window.location.search);
-    if (sp.get('payment') === 'success') {
-      setCheckoutStep('success');
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  }, []);
+  // Payment status is now handled by <PaymentStatusModal /> which reads
+  // the ?payment= URL param and cleans up the URL itself.
 
   // Body scroll lock for modal
   useEffect(() => {
@@ -900,6 +895,9 @@ export default function EventDetails() {
           </motion.button>
         )}
       </AnimatePresence>
+
+      {/* ─── Payment Status Modal (PayStation callback) ─── */}
+      <PaymentStatusModal eventId={eventId} />
 
     </div>
   );

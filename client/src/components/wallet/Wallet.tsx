@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { QRModal } from './QRModal';
 import { BDTIcon } from '../ui/Icons';
+import PaymentStatusModal from '../events/PaymentStatusModal';
 
 /* ─── Premium QR Icon SVG ─── */
 const PremiumQRIcon = ({ className }: { className?: string }) => (
@@ -649,6 +650,9 @@ export default function WalletPage() {
           onDownload={() => handleDownloadQR(selectedTicket)}
         />
       )}
+
+      {/* ─── Payment Status Modal (PayStation callback) ─── */}
+      <PaymentStatusModal />
     </div>
   );
 }
