@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, X, MessageSquare, MoreHorizontal, ArrowLeft, Plus, Mic, ArrowUp, Sparkles, ChevronDown } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { useSupport } from '@/lib/context/support';
 import { useAuth } from '@/lib/context/auth';
 import { Logo } from '@/components/shared/Logo';
@@ -53,6 +54,13 @@ const ZennyAvatar = ({ size = 'large' }: { size?: 'small' | 'medium' | 'large' }
 export const SupportChat = () => {
   const { isOpen, toggleChat } = useSupport();
   const { user } = useAuth();
+  const pathname = usePathname();
+
+  // Hide Zenny on event detail pages to avoid overlapping with purchase buttons
+  if (pathname?.startsWith('/events/') && pathname !== '/events') {
+    return null;
+  }
+
   const [message, setMessage] = useState('');
   const suggestions = [
     "Tell me about your refund policy",
